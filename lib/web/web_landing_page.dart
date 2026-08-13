@@ -30,7 +30,6 @@ class _WebLandingPageState extends State<WebLandingPage> {
           password: _passwordController.text,
         );
         if (mounted) {
-          // PUPUNTA SA BLANK PAGE KAPAG SUCCESS!
           Navigator.pushReplacementNamed(context, '/web-home');
         }
       } else {
@@ -106,7 +105,8 @@ class _WebLandingPageState extends State<WebLandingPage> {
           : SingleChildScrollView(
               child: Column(
                 children: [
-                  SizedBox(height: 300, child: _buildBrandingSide()),
+                  // TINANGGAL YUNG SIZEDBOX HEIGHT 300 PARA HINDI MA-CUT ANG BUTTON
+                  _buildBrandingSide(),
                   _buildAuthForm(),
                 ],
               ),
@@ -114,11 +114,15 @@ class _WebLandingPageState extends State<WebLandingPage> {
     );
   }
 
-  // LEFT SIDE: BRANDING AT BUTTON PARA SA MOBILE
+  // LEFT SIDE / TOP SIDE: BRANDING AT BUTTON PARA SA MOBILE
   Widget _buildBrandingSide() {
     return Container(
+      width: double.infinity, // PARA PUNO ANG SCREEN LAPAD SA MOBILE
       color: const Color(0xFF1A1A1A),
-      padding: const EdgeInsets.all(40),
+      padding: const EdgeInsets.symmetric(
+        horizontal: 40,
+        vertical: 60,
+      ), // INAYOS ANG PADDING
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: MainAxisAlignment.center,
@@ -159,7 +163,7 @@ class _WebLandingPageState extends State<WebLandingPage> {
     );
   }
 
-  // RIGHT SIDE: YUNG FORM PARA SA SIGN UP AT LOGIN
+  // RIGHT SIDE / BOTTOM SIDE: YUNG FORM PARA SA SIGN UP AT LOGIN
   Widget _buildAuthForm() {
     return Container(
       constraints: const BoxConstraints(maxWidth: 450),
