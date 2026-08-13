@@ -1,0 +1,321 @@
+import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
+class AdminCustomers extends StatefulWidget {
+  const AdminCustomers({super.key});
+
+  @override
+  State<AdminCustomers> createState() => _AdminCustomersState();
+}
+
+class _AdminCustomersState extends State<AdminCustomers> {
+  final _supabase = Supabase.instance.client;
+  List<Map<String, dynamic>> _allCustomers = [];
+  List<Map<String, dynamic>> _filteredCustomers = [];
+  bool _isLoading = true;
+  final TextEditingController _searchController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchCustomers();
+  }
+
+  // Kumukuha ito ng data mula sa bago nating 'customers' table!
+  Future<void> _fetchCustomers() async {
+    setState(() => _isLoading = true);
+    try {
+      final response = await _supabase
+          .from('customers')
+          .select()
+          .order('created_at', ascending: false);
+
+      if (mounted) {
+        setState(() {
+          _allCustomers = List<Map<String, dynamic>>.from(response);
+          _filteredCustomers = _allCustomers;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error fetching customers: $e');
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  void _filterCustomers(String query) {
+    setState(() {
+      if (query.isEmpty) {
+        _filteredCustomers = _allCustomers;
+      } else {
+        _filteredCustomers = _allCustomers.where((customer) {
+          final firstName = (customer['first_name'] ?? '')
+              .toString()
+              .toLowerCase();
+          final lastName = (customer['last_name'] ?? '')
+              .toString()
+              .toLowerCase();
+          final email = (customer['email'] ?? '').toString().toLowerCase();
+          final searchLower = query.toLowerCase();
+
+          return firstName.contains(searchLower) ||
+              lastName.contains(searchLower) ||
+              email.contains(searchLower);
+        }).toList();
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.all(24.0),
+      padding: const EdgeInsets.all(32.0),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: const [
+                  Text(
+                    'Registered Accounts',
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF1A1A1A),
+                    ),
+                  ),
+                  SizedBox(height: 4),
+                  Text(
+                    'Directory of all clients registered in the Katala portal.',
+                    style: TextStyle(fontSize: 14, color: Colors.grey),
+                  ),
+                ],
+              ),
+              OutlinedButton.icon(
+                onPressed: _fetchCustomers,
+                icon: const Icon(
+                  Icons.refresh,
+                  color: Color(0xFFB71C1C),
+                  size: 18,
+                ),
+                label: const Text(
+                  'Refresh List',
+                  style: TextStyle(color: Color(0xFFB71C1C)),
+                ),
+                style: OutlinedButton.styleFrom(
+                  side: const BorderSide(color: Color(0xFFB71C1C)),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+
+          // SEARCH BAR
+          Row(
+            children: [
+              Expanded(
+                child: Container(
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF5F6FA),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: TextField(
+                    controller: _searchController,
+                    onChanged: _filterCustomers,
+                    decoration: const InputDecoration(
+                      hintText: 'Search by Name or Email...',
+                      prefixIcon: Icon(
+                        Icons.search,
+                        color: Colors.grey,
+                        size: 20,
+                      ),
+                      border: InputBorder.none,
+                      contentPadding: EdgeInsets.symmetric(vertical: 10),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+
+          // TABLE HEADER
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: const BoxDecoration(
+              border: Border(
+                bottom: BorderSide(color: Color(0xFFE0E0E0), width: 2),
+              ),
+            ),
+            child: Row(
+              children: const [
+                Expanded(
+                  flex: 2,
+                  child: Text(
+                    'ACCOUNT ID',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 10,
+                      color: Colors.grey,
+                    ),
+                  ),
+                ),
+                Expanded(
+                  flex: 3,
+                  child: Text(
+                    'FULL NAME',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 10,
+                      color: Colors.grey,
+                    ),
+                  ),
+                ),
+                Expanded(
+                  flex: 3,
+                  child: Text(
+                    'EMAIL ADDRESS',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 10,
+                      color: Colors.grey,
+                    ),
+                  ),
+                ),
+                Expanded(
+                  flex: 2,
+                  child: Text(
+                    'CONTACT NUMBER',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 10,
+                      color: Colors.grey,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // TABLE BODY
+          Expanded(
+            child: _isLoading
+                ? const Center(
+                    child: CircularProgressIndicator(color: Color(0xFFB71C1C)),
+                  )
+                : _filteredCustomers.isEmpty
+                ? const Center(
+                    child: Text(
+                      'No registered accounts found.',
+                      style: TextStyle(color: Colors.grey),
+                    ),
+                  )
+                : ListView.builder(
+                    itemCount: _filteredCustomers.length,
+                    itemBuilder: (context, index) {
+                      final customer = _filteredCustomers[index];
+                      final String id = customer['id'] ?? 'N/A';
+                      final String shortId = id.length > 8
+                          ? id.substring(0, 8).toUpperCase()
+                          : id;
+                      final String fullName =
+                          '${customer['first_name'] ?? ''} ${customer['last_name'] ?? ''}'
+                              .trim();
+
+                      return Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 16,
+                        ),
+                        decoration: const BoxDecoration(
+                          border: Border(
+                            bottom: BorderSide(color: Color(0xFFF0F0F0)),
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              flex: 2,
+                              child: Text(
+                                '#$shortId',
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF999999),
+                                ),
+                              ),
+                            ),
+                            Expanded(
+                              flex: 3,
+                              child: Row(
+                                children: [
+                                  CircleAvatar(
+                                    radius: 16,
+                                    backgroundColor: const Color(0xFFFFF0F0),
+                                    child: Text(
+                                      fullName.isNotEmpty
+                                          ? fullName[0].toUpperCase()
+                                          : '?',
+                                      style: const TextStyle(
+                                        color: Color(0xFFB71C1C),
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Text(
+                                      fullName,
+                                      style: const TextStyle(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w600,
+                                        color: Color(0xFF1A1A1A),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Expanded(
+                              flex: 3,
+                              child: Text(
+                                customer['email'] ?? 'N/A',
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  color: Color(0xFF666666),
+                                ),
+                              ),
+                            ),
+                            Expanded(
+                              flex: 2,
+                              child: Text(
+                                customer['contact_number'] ?? 'N/A',
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  color: Color(0xFF666666),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+          ),
+        ],
+      ),
+    );
+  }
+}

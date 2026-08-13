@@ -1,0 +1,370 @@
+import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
+class AdminDashboard extends StatefulWidget {
+  const AdminDashboard({super.key});
+
+  @override
+  State<AdminDashboard> createState() => _AdminDashboardState();
+}
+
+class _AdminDashboardState extends State<AdminDashboard> {
+  final _supabase = Supabase.instance.client;
+
+  int _totalProducts = 0;
+  int _totalServices = 0;
+  int _pendingRequests = 0;
+  List<Map<String, dynamic>> _recentActivities = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchDashboardStats();
+  }
+
+  Future<void> _fetchDashboardStats() async {
+    setState(() => _isLoading = true);
+    try {
+      // 1. Bilangin ang total products
+      final productsRes = await _supabase.from('products').select('id');
+      _totalProducts = productsRes.length;
+
+      // 2. Bilangin ang total services
+      final servicesRes = await _supabase.from('services').select('id');
+      _totalServices = servicesRes.length;
+
+      // 3. Bilangin ang pending requests
+      final quotesRes = await _supabase
+          .from('quotations')
+          .select('id')
+          .eq('status', 'Pending');
+      _pendingRequests = quotesRes.length;
+
+      // 4. Kunin ang 5 pinakabagong requests para sa "Recent Activity"
+      final recentRes = await _supabase
+          .from('quotations')
+          .select()
+          .order('date_submitted', ascending: false)
+          .limit(5);
+
+      if (mounted) {
+        setState(() {
+          _recentActivities = List<Map<String, dynamic>>.from(recentRes);
+        });
+      }
+    } catch (e) {
+      debugPrint('Dashboard Error: $e');
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(32.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildHeader(),
+          const SizedBox(height: 32),
+          _isLoading
+              ? const Center(
+                  child: CircularProgressIndicator(color: Color(0xFFB71C1C)),
+                )
+              : _buildStatsRow(),
+          const SizedBox(height: 32),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                flex: 2,
+                child: _buildPlaceholderChart('Request Volume Trend'),
+              ),
+              const SizedBox(width: 24),
+              Expanded(
+                flex: 1,
+                child: _buildPlaceholderChart('Status Distribution'),
+              ),
+            ],
+          ),
+          const SizedBox(height: 32),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                flex: 2,
+                child: _buildPlaceholderTable('Upcoming Appointments'),
+              ),
+              const SizedBox(width: 24),
+              Expanded(flex: 1, child: _buildRecentActivity()),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHeader() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: const [
+            Text(
+              'System Overview',
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF1A1A1A),
+              ),
+            ),
+            SizedBox(height: 4),
+            Text(
+              'High-level operational metrics and recent activity for Katala Fire Protection.',
+              style: TextStyle(fontSize: 14, color: Colors.grey),
+            ),
+          ],
+        ),
+        OutlinedButton.icon(
+          onPressed: _fetchDashboardStats,
+          icon: const Icon(Icons.refresh, color: Color(0xFFB71C1C), size: 18),
+          label: const Text(
+            'Refresh Data',
+            style: TextStyle(color: Color(0xFFB71C1C)),
+          ),
+          style: OutlinedButton.styleFrom(
+            side: const BorderSide(color: Color(0xFFB71C1C)),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(6),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildStatsRow() {
+    return Row(
+      children: [
+        Expanded(
+          child: _buildStatCard(
+            'TOTAL ACTIVE PRODUCTS',
+            _totalProducts.toString(),
+            Icons.inventory_2_outlined,
+          ),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: _buildStatCard(
+            'TOTAL SERVICES',
+            _totalServices.toString(),
+            Icons.design_services_outlined,
+          ),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: _buildStatCard(
+            'PENDING SERVICE REQS',
+            _pendingRequests.toString(),
+            Icons.description_outlined,
+            isHighlight: true,
+          ),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: _buildStatCard('TOTAL CUSTOMERS', '0', Icons.people_outline),
+        ), // Placeholder for Customers
+      ],
+    );
+  }
+
+  Widget _buildStatCard(
+    String title,
+    String count,
+    IconData icon, {
+    bool isHighlight = false,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: isHighlight
+              ? const Color(0xFFB71C1C).withOpacity(0.3)
+              : const Color(0xFFE0E0E0),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.02),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                    color: isHighlight ? const Color(0xFFB71C1C) : Colors.grey,
+                  ),
+                ),
+              ),
+              Icon(icon, size: 16, color: Colors.grey.withOpacity(0.5)),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            count,
+            style: const TextStyle(
+              fontSize: 32,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF1A1A1A),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRecentActivity() {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: const Color(0xFFE0E0E0)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Recent Activity',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 16),
+          if (_recentActivities.isEmpty)
+            const Text(
+              'No recent activities.',
+              style: TextStyle(color: Colors.grey, fontSize: 13),
+            )
+          else
+            ..._recentActivities.map((activity) {
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 16.0),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Icon(
+                      Icons.info_outline,
+                      size: 16,
+                      color: Color(0xFFB71C1C),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'New quotation requested by ${activity['customer_name']}',
+                            style: const TextStyle(
+                              fontSize: 13,
+                              color: Color(0xFF333333),
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            activity['date_submitted']?.toString().substring(
+                                  0,
+                                  10,
+                                ) ??
+                                '',
+                            style: const TextStyle(
+                              fontSize: 10,
+                              color: Colors.grey,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPlaceholderChart(String title) {
+    return Container(
+      height: 250,
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: const Color(0xFFE0E0E0)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          ),
+          const Expanded(
+            child: Center(
+              child: Text(
+                'Chart Visualization UI Pending',
+                style: TextStyle(color: Colors.grey),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPlaceholderTable(String title) {
+    return Container(
+      height: 250,
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: const Color(0xFFE0E0E0)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          ),
+          const Expanded(
+            child: Center(
+              child: Text(
+                'Table UI Pending',
+                style: TextStyle(color: Colors.grey),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}

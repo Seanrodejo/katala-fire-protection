@@ -1,0 +1,341 @@
+import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
+class WebLandingPage extends StatefulWidget {
+  const WebLandingPage({super.key});
+
+  @override
+  State<WebLandingPage> createState() => _WebLandingPageState();
+}
+
+class _WebLandingPageState extends State<WebLandingPage> {
+  final _supabase = Supabase.instance.client;
+  bool _isLogin = true;
+  bool _isLoading = false;
+
+  final _firstNameController = TextEditingController();
+  final _lastNameController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _phoneController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
+
+  Future<void> _handleAuth() async {
+    setState(() => _isLoading = true);
+    try {
+      if (_isLogin) {
+        // WEB LOGIN LOGIC
+        await _supabase.auth.signInWithPassword(
+          email: _emailController.text.trim(),
+          password: _passwordController.text,
+        );
+        if (mounted) {
+          // PUPUNTA SA BLANK PAGE KAPAG SUCCESS!
+          Navigator.pushReplacementNamed(context, '/web-home');
+        }
+      } else {
+        // WEB SIGN UP LOGIC
+        if (_passwordController.text != _confirmPasswordController.text) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Passwords do not match!'),
+              backgroundColor: Colors.red,
+            ),
+          );
+          return;
+        }
+
+        final response = await _supabase.auth.signUp(
+          email: _emailController.text.trim(),
+          password: _passwordController.text,
+        );
+
+        if (mounted && response.user != null) {
+          try {
+            await _supabase.from('customers').insert({
+              'id': response.user!.id,
+              'first_name': _firstNameController.text.trim(),
+              'last_name': _lastNameController.text.trim(),
+              'email': _emailController.text.trim(),
+              'contact_number': _phoneController.text.trim(),
+            });
+          } catch (e) {
+            debugPrint('Error: $e');
+          }
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Web Account created! You can now log in.'),
+              backgroundColor: Colors.green,
+            ),
+          );
+          setState(() {
+            _isLogin = true;
+            _passwordController.clear();
+            _confirmPasswordController.clear();
+          });
+        }
+      }
+    } catch (e) {
+      if (mounted)
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+        );
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDesktop = MediaQuery.of(context).size.width > 800;
+
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: isDesktop
+          ? Row(
+              children: [
+                Expanded(child: _buildBrandingSide()),
+                Expanded(
+                  child: Center(
+                    child: SingleChildScrollView(child: _buildAuthForm()),
+                  ),
+                ),
+              ],
+            )
+          : SingleChildScrollView(
+              child: Column(
+                children: [
+                  SizedBox(height: 300, child: _buildBrandingSide()),
+                  _buildAuthForm(),
+                ],
+              ),
+            ),
+    );
+  }
+
+  // LEFT SIDE: BRANDING AT BUTTON PARA SA MOBILE
+  Widget _buildBrandingSide() {
+    return Container(
+      color: const Color(0xFF1A1A1A),
+      padding: const EdgeInsets.all(40),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.shield, color: Color(0xFFB71C1C), size: 64),
+          const SizedBox(height: 24),
+          const Text(
+            'Katala Fire Protection\nWeb Portal',
+            style: TextStyle(
+              fontSize: 40,
+              fontWeight: FontWeight.w900,
+              color: Colors.white,
+              height: 1.1,
+            ),
+          ),
+          const SizedBox(height: 16),
+          const Text(
+            'Access your dashboard, manage quotations, and review safety compliance reports from your browser.',
+            style: TextStyle(fontSize: 16, color: Colors.grey, height: 1.5),
+          ),
+          const SizedBox(height: 48),
+
+          // BUTTON PARA PUMUNTA SA MOBILE VERSION
+          OutlinedButton.icon(
+            onPressed: () => Navigator.pushNamed(context, '/app'),
+            icon: const Icon(Icons.smartphone, color: Colors.white),
+            label: const Text(
+              'Go to Mobile Version',
+              style: TextStyle(color: Colors.white),
+            ),
+            style: OutlinedButton.styleFrom(
+              side: const BorderSide(color: Colors.white),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // RIGHT SIDE: YUNG FORM PARA SA SIGN UP AT LOGIN
+  Widget _buildAuthForm() {
+    return Container(
+      constraints: const BoxConstraints(maxWidth: 450),
+      padding: const EdgeInsets.all(32.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            _isLogin ? 'Web Sign In' : 'Create Web Account',
+            style: const TextStyle(
+              fontSize: 28,
+              fontWeight: FontWeight.w900,
+              color: Color(0xFF1A1A1A),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            _isLogin
+                ? 'Enter your credentials to access the web portal.'
+                : 'Register to manage your fire safety systems online.',
+            style: const TextStyle(fontSize: 14, color: Color(0xFF666666)),
+          ),
+          const SizedBox(height: 32),
+
+          if (!_isLogin) ...[
+            Row(
+              children: [
+                Expanded(
+                  child: _buildTextField(
+                    'First Name',
+                    'Jane',
+                    _firstNameController,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: _buildTextField(
+                    'Last Name',
+                    'Doe',
+                    _lastNameController,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+          ],
+
+          _buildTextField(
+            'Email Address',
+            'jane.doe@company.com',
+            _emailController,
+          ),
+          const SizedBox(height: 16),
+
+          if (!_isLogin) ...[
+            _buildTextField(
+              'Contact Number',
+              '+63 900 000 0000',
+              _phoneController,
+            ),
+            const SizedBox(height: 16),
+          ],
+
+          _buildTextField(
+            'Password',
+            '••••••••',
+            _passwordController,
+            isPassword: true,
+          ),
+          const SizedBox(height: 16),
+
+          if (!_isLogin) ...[
+            _buildTextField(
+              'Confirm Password',
+              '••••••••',
+              _confirmPasswordController,
+              isPassword: true,
+            ),
+            const SizedBox(height: 24),
+          ],
+
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: _isLoading ? null : _handleAuth,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFB71C1C),
+                padding: const EdgeInsets.symmetric(vertical: 16),
+              ),
+              child: _isLoading
+                  ? const SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 2,
+                      ),
+                    )
+                  : Text(
+                      _isLogin ? 'Sign In' : 'Sign Up',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+            ),
+          ),
+          const SizedBox(height: 24),
+
+          Center(
+            child: InkWell(
+              onTap: () => setState(() {
+                _isLogin = !_isLogin;
+                _passwordController.clear();
+                _confirmPasswordController.clear();
+              }),
+              child: Text(
+                _isLogin
+                    ? "Don't have an account? Sign up here."
+                    : "Already have an account? Sign in here.",
+                style: const TextStyle(
+                  color: Color(0xFFB71C1C),
+                  fontWeight: FontWeight.bold,
+                  decoration: TextDecoration.underline,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTextField(
+    String label,
+    String hint,
+    TextEditingController controller, {
+    bool isPassword = false,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.bold,
+            color: Color(0xFF333333),
+          ),
+        ),
+        const SizedBox(height: 8),
+        TextField(
+          controller: controller,
+          obscureText: isPassword,
+          decoration: InputDecoration(
+            hintText: hint,
+            hintStyle: const TextStyle(color: Color(0xFF999999), fontSize: 13),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 14,
+            ),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(6),
+              borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(6),
+              borderSide: const BorderSide(color: Color(0xFFB71C1C)),
+            ),
+            filled: true,
+            fillColor: const Color(0xFFFAFAFA),
+          ),
+        ),
+      ],
+    );
+  }
+}

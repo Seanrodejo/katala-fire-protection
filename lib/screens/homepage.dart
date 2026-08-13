@@ -1,0 +1,362 @@
+import 'package:flutter/material.dart';
+
+class Homepage extends StatelessWidget {
+  final VoidCallback onRequestQuote;
+  final VoidCallback onExploreServices;
+  final VoidCallback onViewCatalog;
+
+  const Homepage({
+    super.key,
+    required this.onRequestQuote,
+    required this.onExploreServices,
+    required this.onViewCatalog,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 16),
+                const Text(
+                  'Total Protection,\nUncompromising\nReliability',
+                  style: TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.w900,
+                    color: Color(0xFF1A1A1A),
+                    height: 1.1,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'Delivering professional fire safety services and precision-engineered suppression systems for industrial, commercial, and high-risk environments.',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Color(0xFF666666),
+                    height: 1.5,
+                  ),
+                ),
+                const SizedBox(height: 24),
+
+                // Buttons
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: onRequestQuote,
+                    icon: const Icon(
+                      Icons.arrow_forward,
+                      color: Colors.white,
+                      size: 16,
+                    ),
+                    label: const Text(
+                      'Request a Quote',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFB71C1C),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton(
+                    onPressed: onExploreServices,
+                    style: OutlinedButton.styleFrom(
+                      side: const BorderSide(color: Color(0xFFB71C1C)),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: const Text(
+                      'Explore Services',
+                      style: TextStyle(
+                        color: Color(0xFFB71C1C),
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 24),
+
+                // Hero Image with System Active Badge
+                Stack(
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: Image.network(
+                        'https://images.unsplash.com/photo-1504917595217-d4dc5ebe6122?q=80&w=800&auto=format&fit=crop',
+                        width: double.infinity,
+                        height: 200,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) => Container(
+                          width: double.infinity,
+                          height: 200,
+                          color: Colors.grey[200],
+                          child: const Icon(
+                            Icons.image_not_supported,
+                            color: Colors.grey,
+                            size: 50,
+                          ),
+                        ),
+                      ),
+                    ),
+                    Positioned(
+                      top: 12,
+                      right: 12,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.9),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Container(
+                              width: 8,
+                              height: 8,
+                              decoration: const BoxDecoration(
+                                color: Color(0xFFB71C1C),
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            const Text(
+                              'System Active',
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF1A1A1A),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 32),
+
+                // Trust Badges
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    _buildTrustBadge(Icons.verified_outlined, 'SEC Registered'),
+                    _buildTrustBadge(
+                      Icons.engineering_outlined,
+                      'PCAB Licensed',
+                    ),
+                    _buildTrustBadge(Icons.shield_outlined, 'BFP Standard'),
+                    _buildTrustBadge(
+                      Icons.support_agent_outlined,
+                      '24/7 Support',
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 32),
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 3,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFB71C1C),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 32),
+
+                // Precision Equipment Section
+                const Text(
+                  'Precision Equipment',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF1A1A1A),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'Industrial-grade fire safety products engineered for maximum reliability in critical situations.',
+                  style: TextStyle(fontSize: 12, color: Color(0xFF666666)),
+                ),
+                const SizedBox(height: 16),
+
+                _buildEquipmentCard(
+                  icon: Icons.fire_extinguisher,
+                  title: 'Extinguishers',
+                  desc:
+                      'Comprehensive range of ABC Dry Chemical, CO2, and specialized extinguishing units for all fire classes.',
+                  onTap: onViewCatalog,
+                ),
+                const SizedBox(height: 12),
+                _buildEquipmentCard(
+                  icon: Icons.notifications_active_outlined,
+                  title: 'Alarm Systems',
+                  desc:
+                      'Addressable and conventional fire detection panels, sensors, and notification appliances.',
+                  onTap: onViewCatalog,
+                ),
+                const SizedBox(height: 40),
+              ],
+            ),
+          ),
+
+          // BAGONG FOOTER
+          _buildFooter(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTrustBadge(IconData icon, String label) {
+    return Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: const BoxDecoration(
+            color: Color(0xFFF5F6FA),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(icon, color: Color(0xFF666666), size: 24),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          label,
+          style: const TextStyle(fontSize: 9, color: Color(0xFF666666)),
+          textAlign: TextAlign.center,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildEquipmentCard({
+    required IconData icon,
+    required String title,
+    required String desc,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: const Color(0xFFE0E0E0)),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(icon, color: const Color(0xFFB71C1C), size: 24),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                      color: Color(0xFF1A1A1A),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    desc,
+                    style: const TextStyle(
+                      fontSize: 11,
+                      color: Color(0xFF666666),
+                      height: 1.4,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: const [
+                      Text(
+                        'View Specifications',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFFB71C1C),
+                        ),
+                      ),
+                      SizedBox(width: 4),
+                      Icon(
+                        Icons.arrow_forward,
+                        size: 12,
+                        color: Color(0xFFB71C1C),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ETO YUNG DESIGN NG FOOTER
+  Widget _buildFooter() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 24),
+      color: const Color(0xFF1A1A1A), // Dark elegant background
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          const Icon(Icons.shield, color: Color(0xFFB71C1C), size: 36),
+          const SizedBox(height: 16),
+          const Text(
+            'Katala Fire Protection',
+            style: TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+              fontSize: 18,
+            ),
+          ),
+          const SizedBox(height: 4),
+          const Text(
+            'Safeguarding Lives and Assets',
+            style: TextStyle(
+              color: Colors.grey,
+              fontSize: 12,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+          const SizedBox(height: 32),
+          const Divider(color: Color(0xFF333333)),
+          const SizedBox(height: 16),
+          const Text(
+            '© 2026 Katala Fire Protection Product Trading.\nAll rights reserved.',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: Colors.grey, fontSize: 10, height: 1.5),
+          ),
+        ],
+      ),
+    );
+  }
+}
