@@ -48,7 +48,6 @@ class _AdminRequestsState extends State<AdminRequests> {
     }
   }
 
-  // DETAILED VIEW AND RESPOND DIALOG (Responsive Fixed)
   void _showRespondDialog(Map<String, dynamic> request) {
     String newStatus = request['status'] ?? 'Pending';
     final responseController = TextEditingController(
@@ -58,10 +57,8 @@ class _AdminRequestsState extends State<AdminRequests> {
     showDialog(
       context: context,
       builder: (context) {
-        // Alamin kung naka-Desktop o Mobile ang Dialog
         final isDialogDesktop = MediaQuery.of(context).size.width > 800;
 
-        // LEFT SIDE LOGIC (Client Details)
         final clientDetails = Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
@@ -105,7 +102,6 @@ class _AdminRequestsState extends State<AdminRequests> {
           ],
         );
 
-        // RIGHT SIDE LOGIC (Admin Actions)
         final adminActions = Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
@@ -233,11 +229,9 @@ class _AdminRequestsState extends State<AdminRequests> {
             borderRadius: BorderRadius.circular(12),
           ),
           backgroundColor: Colors.white,
-          insetPadding: EdgeInsets.all(
-            isDialogDesktop ? 32 : 16,
-          ), // Dynamic Padding
+          insetPadding: EdgeInsets.all(isDialogDesktop ? 32 : 16),
           child: Container(
-            width: isDialogDesktop ? 800 : double.infinity, // Dynamic Width
+            width: isDialogDesktop ? 800 : double.infinity,
             padding: EdgeInsets.all(isDialogDesktop ? 32.0 : 16.0),
             child: SingleChildScrollView(
               child: isDialogDesktop
@@ -271,7 +265,7 @@ class _AdminRequestsState extends State<AdminRequests> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(
-            width: 100, // In-adjust nang kaunti para kasya sa mobile
+            width: 100,
             child: Text(
               label,
               style: const TextStyle(
@@ -298,7 +292,6 @@ class _AdminRequestsState extends State<AdminRequests> {
 
   @override
   Widget build(BuildContext context) {
-    // LOGIC PARA SA RESPONSIVENESS
     final isDesktop = MediaQuery.of(context).size.width > 800;
 
     List<Map<String, dynamic>> filteredRequests = _requests;
@@ -315,142 +308,143 @@ class _AdminRequestsState extends State<AdminRequests> {
         .length;
     int quotedCount = _requests.where((r) => r['status'] == 'Quoted').length;
 
-    return Container(
-      margin: EdgeInsets.all(isDesktop ? 24.0 : 16.0),
-      padding: EdgeInsets.all(isDesktop ? 32.0 : 16.0),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // BINALOT NATIN SA WRAP ANG HEADER
-          Wrap(
-            alignment: WrapAlignment.spaceBetween,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            spacing: 16,
-            runSpacing: 16,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: const [
-                  Text(
-                    'Quotation Requests',
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF1A1A1A),
+    // FIX: BINALOT NATIN ANG BUONG PAGE SA SingleChildScrollView
+    return SingleChildScrollView(
+      child: Container(
+        margin: EdgeInsets.all(isDesktop ? 24.0 : 16.0),
+        padding: EdgeInsets.all(isDesktop ? 32.0 : 16.0),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Wrap(
+              alignment: WrapAlignment.spaceBetween,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              spacing: 16,
+              runSpacing: 16,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: const [
+                    Text(
+                      'Quotation Requests',
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF1A1A1A),
+                      ),
                     ),
+                    SizedBox(height: 4),
+                    Text(
+                      'Manage detailed client requests and provide engineering quotations.',
+                      style: TextStyle(fontSize: 14, color: Colors.grey),
+                    ),
+                  ],
+                ),
+                OutlinedButton.icon(
+                  onPressed: _fetchRequests,
+                  icon: const Icon(
+                    Icons.refresh,
+                    color: Color(0xFFB71C1C),
+                    size: 18,
                   ),
-                  SizedBox(height: 4),
-                  Text(
-                    'Manage detailed client requests and provide engineering quotations.',
-                    style: TextStyle(fontSize: 14, color: Colors.grey),
+                  label: const Text(
+                    'Refresh List',
+                    style: TextStyle(color: Color(0xFFB71C1C)),
                   ),
-                ],
-              ),
-              OutlinedButton.icon(
-                onPressed: _fetchRequests,
-                icon: const Icon(
-                  Icons.refresh,
-                  color: Color(0xFFB71C1C),
-                  size: 18,
+                  style: OutlinedButton.styleFrom(
+                    side: const BorderSide(color: Color(0xFFB71C1C)),
+                  ),
                 ),
-                label: const Text(
-                  'Refresh List',
-                  style: TextStyle(color: Color(0xFFB71C1C)),
-                ),
-                style: OutlinedButton.styleFrom(
-                  side: const BorderSide(color: Color(0xFFB71C1C)),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 32),
+              ],
+            ),
+            const SizedBox(height: 32),
 
-          // RESPONSIVE STAT CARDS
-          isDesktop
-              ? Row(
-                  children: [
-                    Expanded(
-                      child: _buildStatCard(
+            isDesktop
+                ? Row(
+                    children: [
+                      Expanded(
+                        child: _buildStatCard(
+                          'TOTAL REQUESTS',
+                          _requests.length.toString(),
+                          Colors.black,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: _buildStatCard(
+                          'PENDING',
+                          pendingCount.toString(),
+                          Colors.orange,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: _buildStatCard(
+                          'UNDER REVIEW',
+                          reviewCount.toString(),
+                          Colors.blue,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: _buildStatCard(
+                          'QUOTED',
+                          quotedCount.toString(),
+                          Colors.green,
+                        ),
+                      ),
+                    ],
+                  )
+                : Column(
+                    children: [
+                      _buildStatCard(
                         'TOTAL REQUESTS',
                         _requests.length.toString(),
                         Colors.black,
                       ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: _buildStatCard(
+                      const SizedBox(height: 12),
+                      _buildStatCard(
                         'PENDING',
                         pendingCount.toString(),
                         Colors.orange,
                       ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: _buildStatCard(
+                      const SizedBox(height: 12),
+                      _buildStatCard(
                         'UNDER REVIEW',
                         reviewCount.toString(),
                         Colors.blue,
                       ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: _buildStatCard(
+                      const SizedBox(height: 12),
+                      _buildStatCard(
                         'QUOTED',
                         quotedCount.toString(),
                         Colors.green,
                       ),
-                    ),
-                  ],
-                )
-              : Column(
-                  children: [
-                    _buildStatCard(
-                      'TOTAL REQUESTS',
-                      _requests.length.toString(),
-                      Colors.black,
-                    ),
-                    const SizedBox(height: 12),
-                    _buildStatCard(
-                      'PENDING',
-                      pendingCount.toString(),
-                      Colors.orange,
-                    ),
-                    const SizedBox(height: 12),
-                    _buildStatCard(
-                      'UNDER REVIEW',
-                      reviewCount.toString(),
-                      Colors.blue,
-                    ),
-                    const SizedBox(height: 12),
-                    _buildStatCard(
-                      'QUOTED',
-                      quotedCount.toString(),
-                      Colors.green,
-                    ),
-                  ],
-                ),
+                    ],
+                  ),
 
-          const SizedBox(height: 32),
-          // BINALOT ANG TABS SA SCROLLVIEW PARA HINDI MAG-OVERFLOW SA MOBILE
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: _buildTabs(),
-          ),
-          const SizedBox(height: 16),
-          // ISINAKAY NA ANG TABLE SA RESPONSIVE BUILDER
-          Expanded(child: _buildTable(filteredRequests)),
-        ],
+            const SizedBox(height: 32),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: _buildTabs(),
+            ),
+            const SizedBox(height: 16),
+
+            // FIX: TINANGGAL NA YUNG "Expanded" DITO KASI NAKA-SCROLL NA YUNG BUONG PAGE
+            _buildTable(filteredRequests),
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildStatCard(String title, String count, Color color) {
     return Container(
-      width: double.infinity, // PARA FULL WIDTH SA MOBILE
+      width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -519,7 +513,7 @@ class _AdminRequestsState extends State<AdminRequests> {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: SizedBox(
-        width: 900, // MINIMUM WIDTH PARA SA HORIZONTAL SCROLL
+        width: 900,
         child: Column(
           children: [
             Container(
@@ -601,146 +595,155 @@ class _AdminRequestsState extends State<AdminRequests> {
                 ],
               ),
             ),
-            Expanded(
-              child: _isLoading
-                  ? const Center(
+
+            // FIX: TINANGGAL ANG EXPANDED AT NILAGYAN NG SHRINKWRAP PARA SUMABAY SA SCROLL NG PAGE
+            _isLoading
+                ? const Padding(
+                    padding: EdgeInsets.all(32.0),
+                    child: Center(
                       child: CircularProgressIndicator(
                         color: Color(0xFFB71C1C),
                       ),
-                    )
-                  : requests.isEmpty
-                  ? const Center(
+                    ),
+                  )
+                : requests.isEmpty
+                ? const Padding(
+                    padding: EdgeInsets.all(32.0),
+                    child: Center(
                       child: Text(
                         'No requests found.',
                         style: TextStyle(color: Colors.grey),
                       ),
-                    )
-                  : ListView.builder(
-                      itemCount: requests.length,
-                      itemBuilder: (context, index) {
-                        final req = requests[index];
-                        final status = req['status'] ?? 'Pending';
-                        Color statusColor = Colors.orange;
-                        if (status == 'Under Review') statusColor = Colors.blue;
-                        if (status == 'Quoted') statusColor = Colors.green;
-                        if (status == 'Cancelled') statusColor = Colors.red;
+                    ),
+                  )
+                : ListView.builder(
+                    shrinkWrap: true, // IMPORTANT FIX
+                    physics:
+                        const NeverScrollableScrollPhysics(), // IMPORTANT FIX
+                    itemCount: requests.length,
+                    itemBuilder: (context, index) {
+                      final req = requests[index];
+                      final status = req['status'] ?? 'Pending';
+                      Color statusColor = Colors.orange;
+                      if (status == 'Under Review') statusColor = Colors.blue;
+                      if (status == 'Quoted') statusColor = Colors.green;
+                      if (status == 'Cancelled') statusColor = Colors.red;
 
-                        String rawDate = req['created_at'] ?? 'TBA';
-                        String formattedDate = rawDate.length >= 10
-                            ? rawDate.substring(0, 10)
-                            : rawDate;
+                      String rawDate = req['created_at'] ?? 'TBA';
+                      String formattedDate = rawDate.length >= 10
+                          ? rawDate.substring(0, 10)
+                          : rawDate;
 
-                        return Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 16,
+                      return Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 16,
+                        ),
+                        decoration: const BoxDecoration(
+                          border: Border(
+                            bottom: BorderSide(color: Color(0xFFF0F0F0)),
                           ),
-                          decoration: const BoxDecoration(
-                            border: Border(
-                              bottom: BorderSide(color: Color(0xFFF0F0F0)),
+                        ),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              flex: 2,
+                              child: Text(
+                                req['reference_no'] ?? 'N/A',
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFFB71C1C),
+                                ),
+                              ),
                             ),
-                          ),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                flex: 2,
-                                child: Text(
-                                  req['reference_no'] ?? 'N/A',
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.bold,
-                                    color: Color(0xFFB71C1C),
+                            Expanded(
+                              flex: 3,
+                              child: Text(
+                                req['customer_name'] ?? 'Unknown',
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  color: Color(0xFF1A1A1A),
+                                ),
+                              ),
+                            ),
+                            Expanded(
+                              flex: 3,
+                              child: Row(
+                                children: [
+                                  const Icon(
+                                    Icons.build_outlined,
+                                    size: 14,
+                                    color: Colors.grey,
                                   ),
-                                ),
-                              ),
-                              Expanded(
-                                flex: 3,
-                                child: Text(
-                                  req['customer_name'] ?? 'Unknown',
-                                  style: const TextStyle(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w600,
-                                    color: Color(0xFF1A1A1A),
-                                  ),
-                                ),
-                              ),
-                              Expanded(
-                                flex: 3,
-                                child: Row(
-                                  children: [
-                                    const Icon(
-                                      Icons.build_outlined,
-                                      size: 14,
-                                      color: Colors.grey,
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Expanded(
-                                      child: Text(
-                                        req['request_type'] ?? 'General',
-                                        style: const TextStyle(
-                                          fontSize: 13,
-                                          color: Color(0xFF666666),
-                                        ),
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              Expanded(
-                                flex: 2,
-                                child: Text(
-                                  formattedDate,
-                                  style: const TextStyle(
-                                    fontSize: 13,
-                                    color: Color(0xFF666666),
-                                  ),
-                                ),
-                              ),
-                              Expanded(
-                                flex: 2,
-                                child: Row(
-                                  children: [
-                                    Container(
-                                      width: 8,
-                                      height: 8,
-                                      decoration: BoxDecoration(
-                                        color: statusColor,
-                                        shape: BoxShape.circle,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      status,
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      req['request_type'] ?? 'General',
                                       style: const TextStyle(
                                         fontSize: 13,
                                         color: Color(0xFF666666),
                                       ),
+                                      overflow: TextOverflow.ellipsis,
                                     ),
-                                  ],
-                                ),
-                              ),
-                              Expanded(
-                                flex: 2,
-                                child: InkWell(
-                                  onTap: () => _showRespondDialog(req),
-                                  child: const Text(
-                                    'View & Respond',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: Color(0xFFB71C1C),
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                    textAlign: TextAlign.right,
                                   ),
+                                ],
+                              ),
+                            ),
+                            Expanded(
+                              flex: 2,
+                              child: Text(
+                                formattedDate,
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  color: Color(0xFF666666),
                                 ),
                               ),
-                            ],
-                          ),
-                        );
-                      },
-                    ),
-            ),
+                            ),
+                            Expanded(
+                              flex: 2,
+                              child: Row(
+                                children: [
+                                  Container(
+                                    width: 8,
+                                    height: 8,
+                                    decoration: BoxDecoration(
+                                      color: statusColor,
+                                      shape: BoxShape.circle,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    status,
+                                    style: const TextStyle(
+                                      fontSize: 13,
+                                      color: Color(0xFF666666),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Expanded(
+                              flex: 2,
+                              child: InkWell(
+                                onTap: () => _showRespondDialog(req),
+                                child: const Text(
+                                  'View & Respond',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Color(0xFFB71C1C),
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                  textAlign: TextAlign.right,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
           ],
         ),
       ),
