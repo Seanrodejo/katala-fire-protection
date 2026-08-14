@@ -36,15 +36,45 @@ class _AdminLayoutState extends State<AdminLayout> {
 
   @override
   Widget build(BuildContext context) {
+    // LOGIC PARA SA RESPONSIVENESS
+    final isDesktop = MediaQuery.of(context).size.width > 800;
+
     return Scaffold(
       backgroundColor: const Color(0xFFF5F6FA),
+
+      // KAPAG MOBILE: Ipakita ang AppBar na may Hamburger Menu
+      appBar: isDesktop
+          ? null
+          : AppBar(
+              backgroundColor: const Color(0xFF2C3E50),
+              iconTheme: const IconThemeData(color: Colors.white),
+              title: const Text(
+                'Katala Admin',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
+            ),
+
+      // KAPAG MOBILE: Ipakita ang Sidebar sa loob ng Drawer
+      drawer: isDesktop
+          ? null
+          : Drawer(child: _buildSidebar(context, isDesktop)),
+
       body: Row(
         children: [
-          _buildSidebar(),
+          // KAPAG DESKTOP: Naka-fix ang Sidebar sa kaliwa
+          if (isDesktop) _buildSidebar(context, isDesktop),
+
           Expanded(
             child: Column(
               children: [
-                _buildTopAppBar(),
+                // TOP BAR (Para lang sa Desktop view)
+                if (isDesktop) _buildTopAppBar(),
+
+                // ACTUAL SCREEN CONTENT
                 Expanded(child: _buildAdminBodyContent()),
               ],
             ),
@@ -54,7 +84,7 @@ class _AdminLayoutState extends State<AdminLayout> {
     );
   }
 
-  Widget _buildSidebar() {
+  Widget _buildSidebar(BuildContext context, bool isDesktop) {
     return Container(
       width: 260,
       color: const Color(0xFF2C3E50),
@@ -105,7 +135,13 @@ class _AdminLayoutState extends State<AdminLayout> {
               itemBuilder: (context, index) {
                 bool isSelected = _selectedIndex == index;
                 return InkWell(
-                  onTap: () => setState(() => _selectedIndex = index),
+                  onTap: () {
+                    setState(() => _selectedIndex = index);
+                    // Isara agad ang drawer sa mobile kapag may pinindot
+                    if (!isDesktop) {
+                      Navigator.pop(context);
+                    }
+                  },
                   child: Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 24,
