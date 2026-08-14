@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'admin_dashboard.dart';
 import 'admin_products.dart';
 import 'admin_services.dart';
@@ -6,8 +7,7 @@ import 'admin_portfolio.dart';
 import 'admin_requests.dart';
 import 'admin_appointments.dart';
 import 'admin_customers.dart';
-import 'admin_accounts.dart'; // BAGONG IMPORT
-import 'admin_settings.dart';
+import 'admin_accounts.dart';
 
 class AdminLayout extends StatefulWidget {
   const AdminLayout({super.key});
@@ -17,8 +17,10 @@ class AdminLayout extends StatefulWidget {
 }
 
 class _AdminLayoutState extends State<AdminLayout> {
+  final _supabase = Supabase.instance.client;
   int _selectedIndex = 0;
 
+  // TINANGGAL NA NATIN ANG SETTINGS DITO
   final List<Map<String, dynamic>> _menuItems = [
     {'icon': Icons.dashboard_outlined, 'title': 'Dashboard'},
     {'icon': Icons.inventory_2_outlined, 'title': 'Products'},
@@ -27,22 +29,16 @@ class _AdminLayoutState extends State<AdminLayout> {
     {'icon': Icons.description_outlined, 'title': 'Requests'},
     {'icon': Icons.calendar_today_outlined, 'title': 'Appointments'},
     {'icon': Icons.people_outline, 'title': 'Customers'},
-    {
-      'icon': Icons.manage_accounts_outlined,
-      'title': 'Accounts',
-    }, // BAGONG MENU ITEM
-    {'icon': Icons.settings_outlined, 'title': 'Settings'},
+    {'icon': Icons.manage_accounts_outlined, 'title': 'Accounts'},
   ];
 
   @override
   Widget build(BuildContext context) {
-    // LOGIC PARA SA RESPONSIVENESS
     final isDesktop = MediaQuery.of(context).size.width > 800;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F6FA),
 
-      // KAPAG MOBILE: Ipakita ang AppBar na may Hamburger Menu
       appBar: isDesktop
           ? null
           : AppBar(
@@ -58,23 +54,18 @@ class _AdminLayoutState extends State<AdminLayout> {
               ),
             ),
 
-      // KAPAG MOBILE: Ipakita ang Sidebar sa loob ng Drawer
       drawer: isDesktop
           ? null
           : Drawer(child: _buildSidebar(context, isDesktop)),
 
       body: Row(
         children: [
-          // KAPAG DESKTOP: Naka-fix ang Sidebar sa kaliwa
           if (isDesktop) _buildSidebar(context, isDesktop),
 
           Expanded(
             child: Column(
               children: [
-                // TOP BAR (Para lang sa Desktop view)
                 if (isDesktop) _buildTopAppBar(),
-
-                // ACTUAL SCREEN CONTENT
                 Expanded(child: _buildAdminBodyContent()),
               ],
             ),
@@ -137,7 +128,6 @@ class _AdminLayoutState extends State<AdminLayout> {
                 return InkWell(
                   onTap: () {
                     setState(() => _selectedIndex = index);
-                    // Isara agad ang drawer sa mobile kapag may pinindot
                     if (!isDesktop) {
                       Navigator.pop(context);
                     }
@@ -183,6 +173,32 @@ class _AdminLayoutState extends State<AdminLayout> {
               },
             ),
           ),
+          // LOGOUT BUTTON SA ILALIM
+          const Divider(color: Colors.white12, height: 1),
+          InkWell(
+            onTap: () async {
+              await _supabase.auth.signOut();
+              if (context.mounted) {
+                Navigator.pushReplacementNamed(
+                  context,
+                  '/',
+                ); // Babalik sa login page
+              }
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+              child: Row(
+                children: const [
+                  Icon(Icons.logout, color: Colors.white54, size: 20),
+                  SizedBox(width: 16),
+                  Text(
+                    'Logout',
+                    style: TextStyle(color: Colors.white54, fontSize: 14),
+                  ),
+                ],
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -213,9 +229,8 @@ class _AdminLayoutState extends State<AdminLayout> {
               SizedBox(width: 24),
               CircleAvatar(
                 radius: 18,
-                backgroundImage: NetworkImage(
-                  'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?q=80&w=100&auto=format&fit=crop',
-                ),
+                backgroundColor: Color(0xFF2C3E50),
+                child: Icon(Icons.person, color: Colors.white, size: 18),
               ),
             ],
           ),
@@ -241,9 +256,8 @@ class _AdminLayoutState extends State<AdminLayout> {
       case 6:
         return const AdminCustomers();
       case 7:
-        return const AdminAccounts(); // YUNG BAGONG ACCOUNTS PAGE MO
-      case 8:
-        return const AdminSettings();
+        return const AdminAccounts();
+      // TINANGGAL NA ANG CASE 8 (Settings)
       default:
         return const AdminDashboard();
     }

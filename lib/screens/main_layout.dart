@@ -6,6 +6,7 @@ import 'product_catalog.dart';
 import 'services_page.dart';
 import 'portfolio_page.dart';
 import 'company_profile.dart';
+import 'admin_settings.dart'; // IN-IMPORT NATIN ANG SETTINGS WIDGET DITO
 
 class MainLayout extends StatefulWidget {
   const MainLayout({super.key});
@@ -164,7 +165,6 @@ class _MainLayoutState extends State<MainLayout> {
                             'REQ-${Random().nextInt(9000) + 1000}';
 
                         try {
-                          // IPAPASOK NATIN YUNG MGA BAGONG COLUMNS SA DATABASE
                           await _supabase.from('quotations').insert({
                             'reference_no': refNo,
                             'customer_name': nameController.text,
@@ -188,13 +188,14 @@ class _MainLayoutState extends State<MainLayout> {
                             );
                           }
                         } catch (e) {
-                          if (context.mounted)
+                          if (context.mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
                                 content: Text('Error: $e'),
                                 backgroundColor: Colors.red,
                               ),
                             );
+                          }
                         }
                       },
                       style: ElevatedButton.styleFrom(
@@ -414,6 +415,12 @@ class _MainLayoutState extends State<MainLayout> {
                     title: 'Company Profile',
                     index: 4,
                   ),
+                  // DINAGDAG NA NATIN ANG SETTINGS DITO
+                  _buildMenuItem(
+                    icon: Icons.settings_outlined,
+                    title: 'Settings',
+                    index: 5,
+                  ),
                   const SizedBox(height: 24),
                   SizedBox(
                     width: double.infinity,
@@ -481,6 +488,36 @@ class _MainLayoutState extends State<MainLayout> {
                     ),
                   ),
                 ],
+              ),
+            ),
+            // DINAGDAG NA NATIN ANG LOGOUT BUTTON SA IBABA NG DRAWER
+            const Divider(color: Color(0xFFEEEEEE), height: 1),
+            InkWell(
+              onTap: () async {
+                await _supabase.auth.signOut();
+                if (context.mounted) {
+                  Navigator.pushReplacementNamed(
+                    context,
+                    '/',
+                  ); // Palitan ng ruta ng Login mo kung iba
+                }
+              },
+              child: Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: Row(
+                  children: const [
+                    Icon(Icons.logout, color: Colors.grey, size: 20),
+                    SizedBox(width: 12),
+                    Text(
+                      'Logout',
+                      style: TextStyle(
+                        color: Color(0xFF666666),
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ],
@@ -569,6 +606,8 @@ class _MainLayoutState extends State<MainLayout> {
         return CompanyProfile(
           onRequestQuote: () => _showRequestQuoteDialog(context),
         );
+      case 5: // DINAGDAG ANG ROUTING PARA SA SETTINGS PAGE
+        return const AdminSettings();
       default:
         return Homepage(
           onRequestQuote: () => _showRequestQuoteDialog(context),
