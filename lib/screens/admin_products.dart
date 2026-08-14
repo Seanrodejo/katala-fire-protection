@@ -40,10 +40,11 @@ class _AdminProductsState extends State<AdminProducts> {
         _filteredProducts = _allProducts;
       });
     } catch (e) {
-      if (mounted)
+      if (mounted) {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text('Error: $e')));
+      }
     } finally {
       setState(() => _isLoading = false);
     }
@@ -74,7 +75,7 @@ class _AdminProductsState extends State<AdminProducts> {
     );
     final imageController = TextEditingController(
       text: isEditing ? product['image_url'] : '',
-    ); // BAGONG CONTROLLER
+    );
 
     String selectedCategory =
         (isEditing && _productCategories.contains(product['category']))
@@ -147,7 +148,6 @@ class _AdminProductsState extends State<AdminProducts> {
                   },
                 ),
                 const SizedBox(height: 16),
-                // BAGONG TEXTFIELD PARA SA IMAGE URL
                 TextField(
                   controller: imageController,
                   decoration: const InputDecoration(
@@ -165,16 +165,16 @@ class _AdminProductsState extends State<AdminProducts> {
             ),
             ElevatedButton(
               onPressed: () async {
-                if (nameController.text.isEmpty || skuController.text.isEmpty)
+                if (nameController.text.isEmpty || skuController.text.isEmpty) {
                   return;
+                }
 
                 final data = {
                   'sku': skuController.text,
                   'name': nameController.text,
                   'category': selectedCategory,
                   'stock_status': selectedStatus,
-                  'image_url':
-                      imageController.text, // IPAPASOK NA ANG IMAGE URL SA DB
+                  'image_url': imageController.text,
                 };
 
                 try {
@@ -237,8 +237,11 @@ class _AdminProductsState extends State<AdminProducts> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: 16,
+            runSpacing: 16,
             children: [
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -296,219 +299,260 @@ class _AdminProductsState extends State<AdminProducts> {
             ],
           ),
           const SizedBox(height: 16),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: const BoxDecoration(
-              border: Border(
-                bottom: BorderSide(color: Color(0xFFE0E0E0), width: 2),
-              ),
-            ),
-            child: Row(
-              children: const [
-                Expanded(
-                  flex: 1,
-                  child: Text(
-                    'SKU',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 10,
-                      color: Colors.grey,
-                    ),
-                  ),
-                ),
-                Expanded(
-                  flex: 3,
-                  child: Text(
-                    'PRODUCT NAME',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 10,
-                      color: Colors.grey,
-                    ),
-                  ),
-                ),
-                Expanded(
-                  flex: 2,
-                  child: Text(
-                    'CATEGORY',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 10,
-                      color: Colors.grey,
-                    ),
-                  ),
-                ),
-                Expanded(
-                  flex: 2,
-                  child: Text(
-                    'STATUS',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 10,
-                      color: Colors.grey,
-                    ),
-                  ),
-                ),
-                Expanded(
-                  flex: 1,
-                  child: Text(
-                    'ACTIONS',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 10,
-                      color: Colors.grey,
-                    ),
-                    textAlign: TextAlign.right,
-                  ),
-                ),
-              ],
-            ),
-          ),
+          // BINALOT ANG HEADER AT LIST SA ISANG HORIZONTAL SCROLLVIEW
           Expanded(
-            child: _isLoading
-                ? const Center(
-                    child: CircularProgressIndicator(color: Color(0xFFB71C1C)),
-                  )
-                : _filteredProducts.isEmpty
-                ? const Center(
-                    child: Text(
-                      'No products match your search.',
-                      style: TextStyle(color: Colors.grey),
-                    ),
-                  )
-                : ListView.builder(
-                    itemCount: _filteredProducts.length,
-                    itemBuilder: (context, index) {
-                      final product = _filteredProducts[index];
-                      final status = product['stock_status'] ?? 'IN STOCK';
-                      Color statusColor = Colors.green;
-                      if (status == 'LOW STOCK') statusColor = Colors.orange;
-                      if (status == 'OUT OF STOCK') statusColor = Colors.red;
-
-                      return Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 12,
-                        ),
-                        decoration: const BoxDecoration(
-                          border: Border(
-                            bottom: BorderSide(color: Color(0xFFF0F0F0)),
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: SizedBox(
+                width: 800, // MINIMUM WIDTH PARA HINDI MA-SQUEEZE
+                child: Column(
+                  children: [
+                    // TABLE HEADER
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
+                      decoration: const BoxDecoration(
+                        border: Border(
+                          bottom: BorderSide(
+                            color: Color(0xFFE0E0E0),
+                            width: 2,
                           ),
                         ),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              flex: 1,
-                              child: Text(
-                                product['sku'] ?? '',
-                                style: const TextStyle(
-                                  fontSize: 13,
-                                  color: Color(0xFF666666),
-                                ),
+                      ),
+                      child: Row(
+                        children: const [
+                          Expanded(
+                            flex: 1,
+                            child: Text(
+                              'SKU',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 10,
+                                color: Colors.grey,
                               ),
                             ),
-                            Expanded(
-                              flex: 3,
-                              child: Row(
-                                children: [
-                                  if (product['image_url'] != null &&
-                                      product['image_url']
-                                          .toString()
-                                          .isNotEmpty)
-                                    Padding(
-                                      padding: const EdgeInsets.only(
-                                        right: 8.0,
+                          ),
+                          Expanded(
+                            flex: 3,
+                            child: Text(
+                              'PRODUCT NAME',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 10,
+                                color: Colors.grey,
+                              ),
+                            ),
+                          ),
+                          Expanded(
+                            flex: 2,
+                            child: Text(
+                              'CATEGORY',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 10,
+                                color: Colors.grey,
+                              ),
+                            ),
+                          ),
+                          Expanded(
+                            flex: 2,
+                            child: Text(
+                              'STATUS',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 10,
+                                color: Colors.grey,
+                              ),
+                            ),
+                          ),
+                          Expanded(
+                            flex: 1,
+                            child: Text(
+                              'ACTIONS',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 10,
+                                color: Colors.grey,
+                              ),
+                              textAlign: TextAlign.right,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    // TABLE CONTENT
+                    Expanded(
+                      child: _isLoading
+                          ? const Center(
+                              child: CircularProgressIndicator(
+                                color: Color(0xFFB71C1C),
+                              ),
+                            )
+                          : _filteredProducts.isEmpty
+                          ? const Center(
+                              child: Text(
+                                'No products match your search.',
+                                style: TextStyle(color: Colors.grey),
+                              ),
+                            )
+                          : ListView.builder(
+                              itemCount: _filteredProducts.length,
+                              itemBuilder: (context, index) {
+                                final product = _filteredProducts[index];
+                                final status =
+                                    product['stock_status'] ?? 'IN STOCK';
+                                Color statusColor = Colors.green;
+                                if (status == 'LOW STOCK') {
+                                  statusColor = Colors.orange;
+                                }
+                                if (status == 'OUT OF STOCK') {
+                                  statusColor = Colors.red;
+                                }
+
+                                return Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 12,
+                                  ),
+                                  decoration: const BoxDecoration(
+                                    border: Border(
+                                      bottom: BorderSide(
+                                        color: Color(0xFFF0F0F0),
                                       ),
-                                      child: ClipRRect(
-                                        borderRadius: BorderRadius.circular(4),
-                                        child: Image.network(
-                                          product['image_url'],
-                                          width: 30,
-                                          height: 30,
-                                          fit: BoxFit.cover,
-                                          errorBuilder: (c, e, s) => const Icon(
-                                            Icons.image,
-                                            size: 30,
-                                            color: Colors.grey,
+                                    ),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Expanded(
+                                        flex: 1,
+                                        child: Text(
+                                          product['sku'] ?? '',
+                                          style: const TextStyle(
+                                            fontSize: 13,
+                                            color: Color(0xFF666666),
                                           ),
                                         ),
                                       ),
-                                    ),
-                                  Expanded(
-                                    child: Text(
-                                      product['name'] ?? '',
-                                      style: const TextStyle(
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.bold,
-                                        color: Color(0xFF1A1A1A),
+                                      Expanded(
+                                        flex: 3,
+                                        child: Row(
+                                          children: [
+                                            if (product['image_url'] != null &&
+                                                product['image_url']
+                                                    .toString()
+                                                    .isNotEmpty)
+                                              Padding(
+                                                padding: const EdgeInsets.only(
+                                                  right: 8.0,
+                                                ),
+                                                child: ClipRRect(
+                                                  borderRadius:
+                                                      BorderRadius.circular(4),
+                                                  child: Image.network(
+                                                    product['image_url'],
+                                                    width: 30,
+                                                    height: 30,
+                                                    fit: BoxFit.cover,
+                                                    errorBuilder: (c, e, s) =>
+                                                        const Icon(
+                                                          Icons.image,
+                                                          size: 30,
+                                                          color: Colors.grey,
+                                                        ),
+                                                  ),
+                                                ),
+                                              ),
+                                            Expanded(
+                                              child: Text(
+                                                product['name'] ?? '',
+                                                style: const TextStyle(
+                                                  fontSize: 13,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: Color(0xFF1A1A1A),
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
                                       ),
-                                    ),
+                                      Expanded(
+                                        flex: 2,
+                                        child: Text(
+                                          product['category'] ?? '',
+                                          style: const TextStyle(
+                                            fontSize: 13,
+                                            color: Color(0xFF666666),
+                                          ),
+                                        ),
+                                      ),
+                                      Expanded(
+                                        flex: 2,
+                                        child: Align(
+                                          alignment: Alignment.centerLeft,
+                                          child: Container(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 8,
+                                              vertical: 4,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color: statusColor.withOpacity(
+                                                0.1,
+                                              ),
+                                              borderRadius:
+                                                  BorderRadius.circular(4),
+                                            ),
+                                            child: Text(
+                                              status,
+                                              style: TextStyle(
+                                                fontSize: 10,
+                                                fontWeight: FontWeight.bold,
+                                                color: statusColor,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      Expanded(
+                                        flex: 1,
+                                        child: Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.end,
+                                          children: [
+                                            IconButton(
+                                              icon: const Icon(
+                                                Icons.edit_outlined,
+                                                color: Colors.blue,
+                                                size: 18,
+                                              ),
+                                              onPressed: () =>
+                                                  _showProductDialog(
+                                                    product: product,
+                                                  ),
+                                            ),
+                                            IconButton(
+                                              icon: const Icon(
+                                                Icons.delete_outline,
+                                                color: Colors.red,
+                                                size: 18,
+                                              ),
+                                              onPressed: () =>
+                                                  _deleteProduct(product['id']),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                ],
-                              ),
+                                );
+                              },
                             ),
-                            Expanded(
-                              flex: 2,
-                              child: Text(
-                                product['category'] ?? '',
-                                style: const TextStyle(
-                                  fontSize: 13,
-                                  color: Color(0xFF666666),
-                                ),
-                              ),
-                            ),
-                            Expanded(
-                              flex: 2,
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                  vertical: 4,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: statusColor.withOpacity(0.1),
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                                child: Text(
-                                  status,
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.bold,
-                                    color: statusColor,
-                                  ),
-                                ),
-                              ),
-                            ),
-                            Expanded(
-                              flex: 1,
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.end,
-                                children: [
-                                  IconButton(
-                                    icon: const Icon(
-                                      Icons.edit_outlined,
-                                      color: Colors.blue,
-                                      size: 18,
-                                    ),
-                                    onPressed: () =>
-                                        _showProductDialog(product: product),
-                                  ),
-                                  IconButton(
-                                    icon: const Icon(
-                                      Icons.delete_outline,
-                                      color: Colors.red,
-                                      size: 18,
-                                    ),
-                                    onPressed: () =>
-                                        _deleteProduct(product['id']),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    },
-                  ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ),
         ],
       ),
