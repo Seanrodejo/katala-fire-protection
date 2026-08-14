@@ -38,16 +38,17 @@ class _AdminRequestsState extends State<AdminRequests> {
         _requests = List<Map<String, dynamic>>.from(response);
       });
     } catch (e) {
-      if (mounted)
+      if (mounted) {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text('Error: $e')));
+      }
     } finally {
       setState(() => _isLoading = false);
     }
   }
 
-  // DETAILED VIEW AND RESPOND DIALOG
+  // DETAILED VIEW AND RESPOND DIALOG (Responsive Fixed)
   void _showRespondDialog(Map<String, dynamic> request) {
     String newStatus = request['status'] ?? 'Pending';
     final responseController = TextEditingController(
@@ -57,210 +58,205 @@ class _AdminRequestsState extends State<AdminRequests> {
     showDialog(
       context: context,
       builder: (context) {
+        // Alamin kung naka-Desktop o Mobile ang Dialog
+        final isDialogDesktop = MediaQuery.of(context).size.width > 800;
+
+        // LEFT SIDE LOGIC (Client Details)
+        final clientDetails = Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'Request ${request['reference_no']}',
+              style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFFB71C1C),
+              ),
+            ),
+            const SizedBox(height: 16),
+            _buildInfoRow('Client Name', request['customer_name'] ?? 'N/A'),
+            _buildInfoRow('Email', request['email'] ?? 'N/A'),
+            _buildInfoRow('Contact', request['contact_number'] ?? 'N/A'),
+            _buildInfoRow('Location', request['location'] ?? 'N/A'),
+            _buildInfoRow('Service Req.', request['request_type'] ?? 'N/A'),
+            const SizedBox(height: 16),
+            const Text(
+              'Client Notes / Details:',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 12,
+                color: Colors.grey,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF5F6FA),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Text(
+                request['details'] ?? 'No additional details provided.',
+                style: const TextStyle(fontSize: 13, height: 1.5),
+              ),
+            ),
+          ],
+        );
+
+        // RIGHT SIDE LOGIC (Admin Actions)
+        final adminActions = Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              'Admin Actions',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'Update Status:',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 12,
+                color: Colors.grey,
+              ),
+            ),
+            const SizedBox(height: 4),
+            DropdownButtonFormField<String>(
+              value:
+                  [
+                    'Pending',
+                    'Under Review',
+                    'Quoted',
+                    'Cancelled',
+                  ].contains(newStatus)
+                  ? newStatus
+                  : 'Pending',
+              decoration: const InputDecoration(border: OutlineInputBorder()),
+              items: [
+                'Pending',
+                'Under Review',
+                'Quoted',
+                'Cancelled',
+              ].map((s) => DropdownMenuItem(value: s, child: Text(s))).toList(),
+              onChanged: (val) {
+                if (val != null) newStatus = val;
+              },
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'Admin Response / Quotation Link:',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 12,
+                color: Colors.grey,
+              ),
+            ),
+            const SizedBox(height: 4),
+            TextField(
+              controller: responseController,
+              maxLines: 6,
+              decoration: const InputDecoration(
+                hintText:
+                    'Type your official response, remarks, or paste the link to the quotation document here...',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 24),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text(
+                    'Cancel',
+                    style: TextStyle(color: Colors.grey),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                ElevatedButton(
+                  onPressed: () async {
+                    try {
+                      await _supabase
+                          .from('quotations')
+                          .update({
+                            'status': newStatus,
+                            'admin_response': responseController.text,
+                          })
+                          .eq('id', request['id']);
+
+                      if (mounted) {
+                        Navigator.pop(context);
+                        _fetchRequests();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Response and Status Updated!'),
+                            backgroundColor: Colors.green,
+                          ),
+                        );
+                      }
+                    } catch (e) {
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Error: $e'),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                      }
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFB71C1C),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 16,
+                    ),
+                  ),
+                  child: const Text(
+                    'Save & Update',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        );
+
         return Dialog(
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
           backgroundColor: Colors.white,
-          insetPadding: const EdgeInsets.all(32),
+          insetPadding: EdgeInsets.all(
+            isDialogDesktop ? 32 : 16,
+          ), // Dynamic Padding
           child: Container(
-            width: 800, // Malaking dialog para mukhang professional CRM
-            padding: const EdgeInsets.all(32.0),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // LEFT SIDE: CLIENT DETAILS
-                Expanded(
-                  flex: 1,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        'Request ${request['reference_no']}',
-                        style: const TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFFB71C1C),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      _buildInfoRow(
-                        'Client Name',
-                        request['customer_name'] ?? 'N/A',
-                      ),
-                      _buildInfoRow('Email', request['email'] ?? 'N/A'),
-                      _buildInfoRow(
-                        'Contact',
-                        request['contact_number'] ?? 'N/A',
-                      ),
-                      _buildInfoRow('Location', request['location'] ?? 'N/A'),
-                      _buildInfoRow(
-                        'Service Requested',
-                        request['request_type'] ?? 'N/A',
-                      ),
-                      const SizedBox(height: 16),
-                      const Text(
-                        'Client Notes / Details:',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12,
-                          color: Colors.grey,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF5F6FA),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Text(
-                          request['details'] ??
-                              'No additional details provided.',
-                          style: const TextStyle(fontSize: 13, height: 1.5),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 32),
-                // RIGHT SIDE: ADMIN ACTIONS
-                Expanded(
-                  flex: 1,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Text(
-                        'Admin Actions',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      const Text(
-                        'Update Status:',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12,
-                          color: Colors.grey,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      DropdownButtonFormField<String>(
-                        value:
-                            [
-                              'Pending',
-                              'Under Review',
-                              'Quoted',
-                              'Cancelled',
-                            ].contains(newStatus)
-                            ? newStatus
-                            : 'Pending',
-                        decoration: const InputDecoration(
-                          border: OutlineInputBorder(),
-                        ),
-                        items:
-                            ['Pending', 'Under Review', 'Quoted', 'Cancelled']
-                                .map(
-                                  (s) => DropdownMenuItem(
-                                    value: s,
-                                    child: Text(s),
-                                  ),
-                                )
-                                .toList(),
-                        onChanged: (val) {
-                          if (val != null) newStatus = val;
-                        },
-                      ),
-                      const SizedBox(height: 16),
-                      const Text(
-                        'Admin Response / Quotation Link:',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12,
-                          color: Colors.grey,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      TextField(
-                        controller: responseController,
-                        maxLines: 6,
-                        decoration: const InputDecoration(
-                          hintText:
-                              'Type your official response, remarks, or paste the link to the quotation document here...',
-                          border: OutlineInputBorder(),
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          TextButton(
-                            onPressed: () => Navigator.pop(context),
-                            child: const Text(
-                              'Cancel',
-                              style: TextStyle(color: Colors.grey),
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          ElevatedButton(
-                            onPressed: () async {
-                              try {
-                                await _supabase
-                                    .from('quotations')
-                                    .update({
-                                      'status': newStatus,
-                                      'admin_response': responseController.text,
-                                    })
-                                    .eq('id', request['id']);
-
-                                if (mounted) {
-                                  Navigator.pop(context);
-                                  _fetchRequests();
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text(
-                                        'Response and Status Updated!',
-                                      ),
-                                      backgroundColor: Colors.green,
-                                    ),
-                                  );
-                                }
-                              } catch (e) {
-                                if (mounted)
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text('Error: $e'),
-                                      backgroundColor: Colors.red,
-                                    ),
-                                  );
-                              }
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFFB71C1C),
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 24,
-                                vertical: 16,
-                              ),
-                            ),
-                            child: const Text(
-                              'Save & Update',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+            width: isDialogDesktop ? 800 : double.infinity, // Dynamic Width
+            padding: EdgeInsets.all(isDialogDesktop ? 32.0 : 16.0),
+            child: SingleChildScrollView(
+              child: isDialogDesktop
+                  ? Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(child: clientDetails),
+                        const SizedBox(width: 32),
+                        Expanded(child: adminActions),
+                      ],
+                    )
+                  : Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        clientDetails,
+                        const SizedBox(height: 32),
+                        adminActions,
+                      ],
+                    ),
             ),
           ),
         );
@@ -275,7 +271,7 @@ class _AdminRequestsState extends State<AdminRequests> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(
-            width: 120,
+            width: 100, // In-adjust nang kaunti para kasya sa mobile
             child: Text(
               label,
               style: const TextStyle(
@@ -302,6 +298,9 @@ class _AdminRequestsState extends State<AdminRequests> {
 
   @override
   Widget build(BuildContext context) {
+    // LOGIC PARA SA RESPONSIVENESS
+    final isDesktop = MediaQuery.of(context).size.width > 800;
+
     List<Map<String, dynamic>> filteredRequests = _requests;
     if (_selectedTab != 0) {
       String filterStatus = _tabs[_selectedTab];
@@ -317,8 +316,8 @@ class _AdminRequestsState extends State<AdminRequests> {
     int quotedCount = _requests.where((r) => r['status'] == 'Quoted').length;
 
     return Container(
-      margin: const EdgeInsets.all(24.0),
-      padding: const EdgeInsets.all(32.0),
+      margin: EdgeInsets.all(isDesktop ? 24.0 : 16.0),
+      padding: EdgeInsets.all(isDesktop ? 32.0 : 16.0),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(8),
@@ -326,8 +325,12 @@ class _AdminRequestsState extends State<AdminRequests> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          // BINALOT NATIN SA WRAP ANG HEADER
+          Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: 16,
+            runSpacing: 16,
             children: [
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -365,44 +368,80 @@ class _AdminRequestsState extends State<AdminRequests> {
             ],
           ),
           const SizedBox(height: 32),
-          Row(
-            children: [
-              Expanded(
-                child: _buildStatCard(
-                  'TOTAL REQUESTS',
-                  _requests.length.toString(),
-                  Colors.black,
+
+          // RESPONSIVE STAT CARDS
+          isDesktop
+              ? Row(
+                  children: [
+                    Expanded(
+                      child: _buildStatCard(
+                        'TOTAL REQUESTS',
+                        _requests.length.toString(),
+                        Colors.black,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: _buildStatCard(
+                        'PENDING',
+                        pendingCount.toString(),
+                        Colors.orange,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: _buildStatCard(
+                        'UNDER REVIEW',
+                        reviewCount.toString(),
+                        Colors.blue,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: _buildStatCard(
+                        'QUOTED',
+                        quotedCount.toString(),
+                        Colors.green,
+                      ),
+                    ),
+                  ],
+                )
+              : Column(
+                  children: [
+                    _buildStatCard(
+                      'TOTAL REQUESTS',
+                      _requests.length.toString(),
+                      Colors.black,
+                    ),
+                    const SizedBox(height: 12),
+                    _buildStatCard(
+                      'PENDING',
+                      pendingCount.toString(),
+                      Colors.orange,
+                    ),
+                    const SizedBox(height: 12),
+                    _buildStatCard(
+                      'UNDER REVIEW',
+                      reviewCount.toString(),
+                      Colors.blue,
+                    ),
+                    const SizedBox(height: 12),
+                    _buildStatCard(
+                      'QUOTED',
+                      quotedCount.toString(),
+                      Colors.green,
+                    ),
+                  ],
                 ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: _buildStatCard(
-                  'PENDING',
-                  pendingCount.toString(),
-                  Colors.orange,
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: _buildStatCard(
-                  'UNDER REVIEW',
-                  reviewCount.toString(),
-                  Colors.blue,
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: _buildStatCard(
-                  'QUOTED',
-                  quotedCount.toString(),
-                  Colors.green,
-                ),
-              ),
-            ],
-          ),
+
           const SizedBox(height: 32),
-          _buildTabs(),
+          // BINALOT ANG TABS SA SCROLLVIEW PARA HINDI MAG-OVERFLOW SA MOBILE
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: _buildTabs(),
+          ),
           const SizedBox(height: 16),
+          // ISINAKAY NA ANG TABLE SA RESPONSIVE BUILDER
           Expanded(child: _buildTable(filteredRequests)),
         ],
       ),
@@ -411,6 +450,7 @@ class _AdminRequestsState extends State<AdminRequests> {
 
   Widget _buildStatCard(String title, String count, Color color) {
     return Container(
+      width: double.infinity, // PARA FULL WIDTH SA MOBILE
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -476,223 +516,234 @@ class _AdminRequestsState extends State<AdminRequests> {
   }
 
   Widget _buildTable(List<Map<String, dynamic>> requests) {
-    return Column(
-      children: [
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          decoration: const BoxDecoration(
-            border: Border(
-              bottom: BorderSide(color: Color(0xFFE0E0E0), width: 2),
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: SizedBox(
+        width: 900, // MINIMUM WIDTH PARA SA HORIZONTAL SCROLL
+        child: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: const BoxDecoration(
+                border: Border(
+                  bottom: BorderSide(color: Color(0xFFE0E0E0), width: 2),
+                ),
+              ),
+              child: Row(
+                children: const [
+                  Expanded(
+                    flex: 2,
+                    child: Text(
+                      'REFERENCE NO.',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 10,
+                        color: Colors.grey,
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    flex: 3,
+                    child: Text(
+                      'CUSTOMER NAME',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 10,
+                        color: Colors.grey,
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    flex: 3,
+                    child: Text(
+                      'REQUEST TYPE',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 10,
+                        color: Colors.grey,
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    flex: 2,
+                    child: Text(
+                      'DATE',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 10,
+                        color: Colors.grey,
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    flex: 2,
+                    child: Text(
+                      'STATUS',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 10,
+                        color: Colors.grey,
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    flex: 2,
+                    child: Text(
+                      'ACTIONS',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 10,
+                        color: Colors.grey,
+                      ),
+                      textAlign: TextAlign.right,
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-          child: Row(
-            children: const [
-              Expanded(
-                flex: 2,
-                child: Text(
-                  'REFERENCE NO.',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 10,
-                    color: Colors.grey,
-                  ),
-                ),
-              ),
-              Expanded(
-                flex: 3,
-                child: Text(
-                  'CUSTOMER NAME',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 10,
-                    color: Colors.grey,
-                  ),
-                ),
-              ),
-              Expanded(
-                flex: 3,
-                child: Text(
-                  'REQUEST TYPE',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 10,
-                    color: Colors.grey,
-                  ),
-                ),
-              ),
-              Expanded(
-                flex: 2,
-                child: Text(
-                  'DATE',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 10,
-                    color: Colors.grey,
-                  ),
-                ),
-              ),
-              Expanded(
-                flex: 2,
-                child: Text(
-                  'STATUS',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 10,
-                    color: Colors.grey,
-                  ),
-                ),
-              ),
-              Expanded(
-                flex: 2,
-                child: Text(
-                  'ACTIONS',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 10,
-                    color: Colors.grey,
-                  ),
-                  textAlign: TextAlign.right,
-                ),
-              ),
-            ],
-          ),
-        ),
-        Expanded(
-          child: _isLoading
-              ? const Center(
-                  child: CircularProgressIndicator(color: Color(0xFFB71C1C)),
-                )
-              : requests.isEmpty
-              ? const Center(
-                  child: Text(
-                    'No requests found.',
-                    style: TextStyle(color: Colors.grey),
-                  ),
-                )
-              : ListView.builder(
-                  itemCount: requests.length,
-                  itemBuilder: (context, index) {
-                    final req = requests[index];
-                    final status = req['status'] ?? 'Pending';
-                    Color statusColor = Colors.orange;
-                    if (status == 'Under Review') statusColor = Colors.blue;
-                    if (status == 'Quoted') statusColor = Colors.green;
-                    if (status == 'Cancelled') statusColor = Colors.red;
-
-                    String rawDate = req['created_at'] ?? 'TBA';
-                    String formattedDate = rawDate.length >= 10
-                        ? rawDate.substring(0, 10)
-                        : rawDate;
-
-                    return Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 16,
+            Expanded(
+              child: _isLoading
+                  ? const Center(
+                      child: CircularProgressIndicator(
+                        color: Color(0xFFB71C1C),
                       ),
-                      decoration: const BoxDecoration(
-                        border: Border(
-                          bottom: BorderSide(color: Color(0xFFF0F0F0)),
-                        ),
+                    )
+                  : requests.isEmpty
+                  ? const Center(
+                      child: Text(
+                        'No requests found.',
+                        style: TextStyle(color: Colors.grey),
                       ),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            flex: 2,
-                            child: Text(
-                              req['reference_no'] ?? 'N/A',
-                              style: const TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                                color: Color(0xFFB71C1C),
-                              ),
+                    )
+                  : ListView.builder(
+                      itemCount: requests.length,
+                      itemBuilder: (context, index) {
+                        final req = requests[index];
+                        final status = req['status'] ?? 'Pending';
+                        Color statusColor = Colors.orange;
+                        if (status == 'Under Review') statusColor = Colors.blue;
+                        if (status == 'Quoted') statusColor = Colors.green;
+                        if (status == 'Cancelled') statusColor = Colors.red;
+
+                        String rawDate = req['created_at'] ?? 'TBA';
+                        String formattedDate = rawDate.length >= 10
+                            ? rawDate.substring(0, 10)
+                            : rawDate;
+
+                        return Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 16,
+                          ),
+                          decoration: const BoxDecoration(
+                            border: Border(
+                              bottom: BorderSide(color: Color(0xFFF0F0F0)),
                             ),
                           ),
-                          Expanded(
-                            flex: 3,
-                            child: Text(
-                              req['customer_name'] ?? 'Unknown',
-                              style: const TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                                color: Color(0xFF1A1A1A),
-                              ),
-                            ),
-                          ),
-                          Expanded(
-                            flex: 3,
-                            child: Row(
-                              children: [
-                                const Icon(
-                                  Icons.build_outlined,
-                                  size: 14,
-                                  color: Colors.grey,
+                          child: Row(
+                            children: [
+                              Expanded(
+                                flex: 2,
+                                child: Text(
+                                  req['reference_no'] ?? 'N/A',
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                    color: Color(0xFFB71C1C),
+                                  ),
                                 ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  req['request_type'] ?? 'General',
+                              ),
+                              Expanded(
+                                flex: 3,
+                                child: Text(
+                                  req['customer_name'] ?? 'Unknown',
+                                  style: const TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                    color: Color(0xFF1A1A1A),
+                                  ),
+                                ),
+                              ),
+                              Expanded(
+                                flex: 3,
+                                child: Row(
+                                  children: [
+                                    const Icon(
+                                      Icons.build_outlined,
+                                      size: 14,
+                                      color: Colors.grey,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Text(
+                                        req['request_type'] ?? 'General',
+                                        style: const TextStyle(
+                                          fontSize: 13,
+                                          color: Color(0xFF666666),
+                                        ),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Expanded(
+                                flex: 2,
+                                child: Text(
+                                  formattedDate,
                                   style: const TextStyle(
                                     fontSize: 13,
                                     color: Color(0xFF666666),
                                   ),
                                 ),
-                              ],
-                            ),
-                          ),
-                          Expanded(
-                            flex: 2,
-                            child: Text(
-                              formattedDate,
-                              style: const TextStyle(
-                                fontSize: 13,
-                                color: Color(0xFF666666),
                               ),
-                            ),
-                          ),
-                          Expanded(
-                            flex: 2,
-                            child: Row(
-                              children: [
-                                Container(
-                                  width: 8,
-                                  height: 8,
-                                  decoration: BoxDecoration(
-                                    color: statusColor,
-                                    shape: BoxShape.circle,
+                              Expanded(
+                                flex: 2,
+                                child: Row(
+                                  children: [
+                                    Container(
+                                      width: 8,
+                                      height: 8,
+                                      decoration: BoxDecoration(
+                                        color: statusColor,
+                                        shape: BoxShape.circle,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      status,
+                                      style: const TextStyle(
+                                        fontSize: 13,
+                                        color: Color(0xFF666666),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Expanded(
+                                flex: 2,
+                                child: InkWell(
+                                  onTap: () => _showRespondDialog(req),
+                                  child: const Text(
+                                    'View & Respond',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Color(0xFFB71C1C),
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                    textAlign: TextAlign.right,
                                   ),
                                 ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  status,
-                                  style: const TextStyle(
-                                    fontSize: 13,
-                                    color: Color(0xFF666666),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          Expanded(
-                            flex: 2,
-                            child: InkWell(
-                              onTap: () => _showRespondDialog(req),
-                              child: const Text(
-                                'View & Respond',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Color(0xFFB71C1C),
-                                  fontWeight: FontWeight.bold,
-                                ),
-                                textAlign: TextAlign.right,
                               ),
-                            ),
+                            ],
                           ),
-                        ],
-                      ),
-                    );
-                  },
-                ),
+                        );
+                      },
+                    ),
+            ),
+          ],
         ),
-      ],
+      ),
     );
   }
 }

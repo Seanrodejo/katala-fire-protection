@@ -38,10 +38,11 @@ class _AdminAppointmentsState extends State<AdminAppointments> {
         _appointments = List<Map<String, dynamic>>.from(response);
       });
     } catch (e) {
-      if (mounted)
+      if (mounted) {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text('Error: $e')));
+      }
     } finally {
       setState(() => _isLoading = false);
     }
@@ -101,13 +102,14 @@ class _AdminAppointmentsState extends State<AdminAppointments> {
                     );
                   }
                 } catch (e) {
-                  if (mounted)
+                  if (mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text('Error: $e'),
                         backgroundColor: Colors.red,
                       ),
                     );
+                  }
                 }
               },
               style: ElevatedButton.styleFrom(
@@ -126,6 +128,9 @@ class _AdminAppointmentsState extends State<AdminAppointments> {
 
   @override
   Widget build(BuildContext context) {
+    // RESPONSIVENESS LOGIC
+    final isDesktop = MediaQuery.of(context).size.width > 800;
+
     List<Map<String, dynamic>> filteredAppointments = _appointments;
     if (_selectedTab != 0) {
       String filterStatus = _tabs[_selectedTab];
@@ -135,8 +140,8 @@ class _AdminAppointmentsState extends State<AdminAppointments> {
     }
 
     return Container(
-      margin: const EdgeInsets.all(24.0),
-      padding: const EdgeInsets.all(32.0),
+      margin: EdgeInsets.all(isDesktop ? 24.0 : 16.0),
+      padding: EdgeInsets.all(isDesktop ? 32.0 : 16.0),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(8),
@@ -144,8 +149,12 @@ class _AdminAppointmentsState extends State<AdminAppointments> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          // GINAWANG WRAP ANG HEADER PARA HINDI MA-CUT ANG BUTTON
+          Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: 16,
+            runSpacing: 16,
             children: [
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -183,8 +192,13 @@ class _AdminAppointmentsState extends State<AdminAppointments> {
             ],
           ),
           const SizedBox(height: 32),
-          _buildTabs(),
+          // HORIZONTAL SCROLL PARA SA TABS SA MOBILE
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: _buildTabs(),
+          ),
           const SizedBox(height: 16),
+          // RESPONSIVE TABLE
           Expanded(child: _buildTable(filteredAppointments)),
         ],
       ),
@@ -225,103 +239,112 @@ class _AdminAppointmentsState extends State<AdminAppointments> {
   }
 
   Widget _buildTable(List<Map<String, dynamic>> appointments) {
-    return Column(
-      children: [
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          decoration: const BoxDecoration(
-            border: Border(
-              bottom: BorderSide(color: Color(0xFFE0E0E0), width: 2),
+    // BINALOT ANG TABLE SA HORIZONTAL SCROLLVIEW
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: SizedBox(
+        width: 700, // MINIMUM WIDTH PARA HINDI MAG-SQUEEZE
+        child: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: const BoxDecoration(
+                border: Border(
+                  bottom: BorderSide(color: Color(0xFFE0E0E0), width: 2),
+                ),
+              ),
+              child: Row(
+                children: const [
+                  Expanded(
+                    flex: 3,
+                    child: Text(
+                      'CLIENT NAME',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 10,
+                        color: Colors.grey,
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    flex: 3,
+                    child: Text(
+                      'APPOINTMENT DATE',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 10,
+                        color: Colors.grey,
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    flex: 2,
+                    child: Text(
+                      'STATUS',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 10,
+                        color: Colors.grey,
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    flex: 1,
+                    child: Text(
+                      'ACTIONS',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 10,
+                        color: Colors.grey,
+                      ),
+                      textAlign: TextAlign.right,
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-          child: Row(
-            children: const [
-              Expanded(
-                flex: 3,
-                child: Text(
-                  'CLIENT NAME',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 10,
-                    color: Colors.grey,
-                  ),
-                ),
-              ),
-              Expanded(
-                flex: 3,
-                child: Text(
-                  'APPOINTMENT DATE',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 10,
-                    color: Colors.grey,
-                  ),
-                ),
-              ),
-              Expanded(
-                flex: 2,
-                child: Text(
-                  'STATUS',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 10,
-                    color: Colors.grey,
-                  ),
-                ),
-              ),
-              Expanded(
-                flex: 1,
-                child: Text(
-                  'ACTIONS',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 10,
-                    color: Colors.grey,
-                  ),
-                  textAlign: TextAlign.right,
-                ),
-              ),
-            ],
-          ),
-        ),
-        Expanded(
-          child: _isLoading
-              ? const Center(
-                  child: CircularProgressIndicator(color: Color(0xFFB71C1C)),
-                )
-              : appointments.isEmpty
-              ? const Center(
-                  child: Text(
-                    'No appointments booked yet.',
-                    style: TextStyle(color: Colors.grey),
-                  ),
-                )
-              : ListView.builder(
-                  itemCount: appointments.length,
-                  itemBuilder: (context, index) {
-                    final appt = appointments[index];
-                    final status = appt['status'] ?? 'Pending';
-                    Color statusColor = Colors.orange;
-                    if (status == 'Confirmed') statusColor = Colors.blue;
-                    if (status == 'Completed') statusColor = Colors.green;
-                    if (status == 'Cancelled') statusColor = Colors.red;
+            Expanded(
+              child: _isLoading
+                  ? const Center(
+                      child: CircularProgressIndicator(
+                        color: Color(0xFFB71C1C),
+                      ),
+                    )
+                  : appointments.isEmpty
+                  ? const Center(
+                      child: Text(
+                        'No appointments booked yet.',
+                        style: TextStyle(color: Colors.grey),
+                      ),
+                    )
+                  : ListView.builder(
+                      itemCount: appointments.length,
+                      itemBuilder: (context, index) {
+                        final appt = appointments[index];
+                        final status = appt['status'] ?? 'Pending';
+                        Color statusColor = Colors.orange;
+                        if (status == 'Confirmed') statusColor = Colors.blue;
+                        if (status == 'Completed') statusColor = Colors.green;
+                        if (status == 'Cancelled') statusColor = Colors.red;
 
-                    String rawDate = appt['appointment_date'] ?? 'TBA';
-                    String formattedDate = rawDate.length >= 10
-                        ? rawDate.substring(0, 10)
-                        : rawDate;
+                        String rawDate = appt['appointment_date'] ?? 'TBA';
+                        String formattedDate = rawDate.length >= 10
+                            ? rawDate.substring(0, 10)
+                            : rawDate;
 
-                    return _buildTableRow(
-                      appt['id'],
-                      appt['client_name'] ?? 'Unknown',
-                      formattedDate,
-                      status,
-                      statusColor,
-                    );
-                  },
-                ),
+                        return _buildTableRow(
+                          appt['id'].toString(),
+                          appt['client_name'] ?? 'Unknown',
+                          formattedDate,
+                          status,
+                          statusColor,
+                        );
+                      },
+                    ),
+            ),
+          ],
         ),
-      ],
+      ),
     );
   }
 

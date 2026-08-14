@@ -39,10 +39,11 @@ class _AdminPortfolioState extends State<AdminPortfolio> {
         _filteredProjects = _allProjects;
       });
     } catch (e) {
-      if (mounted)
+      if (mounted) {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text('Error: $e')));
+      }
     } finally {
       setState(() => _isLoading = false);
     }
@@ -81,7 +82,6 @@ class _AdminPortfolioState extends State<AdminPortfolio> {
       text: isEditing ? project['image_url'] : '',
     );
 
-    // Safety check para sa dropdown default value
     String selectedCategory =
         (isEditing && _portfolioCategories.contains(project['category']))
         ? project['category']
@@ -108,7 +108,6 @@ class _AdminPortfolioState extends State<AdminPortfolio> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                // CATEGORY DROPDOWN
                 DropdownButtonFormField<String>(
                   value: selectedCategory,
                   decoration: const InputDecoration(
@@ -230,8 +229,12 @@ class _AdminPortfolioState extends State<AdminPortfolio> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          // BINALOT SA WRAP PARA HINDI MA-CUT ANG BUTTON SA MOBILE
+          Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: 16,
+            runSpacing: 16,
             children: [
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,

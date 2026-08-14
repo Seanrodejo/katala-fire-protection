@@ -64,8 +64,13 @@ class _AdminDashboardState extends State<AdminDashboard> {
 
   @override
   Widget build(BuildContext context) {
+    // ETO ANG LOGIC PARA MALAMAN KUNG NAKA-MOBILE O DESKTOP
+    final isDesktop = MediaQuery.of(context).size.width > 800;
+
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(32.0),
+      padding: EdgeInsets.all(
+        isDesktop ? 32.0 : 16.0,
+      ), // Mas maliit na padding pag mobile
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -75,42 +80,67 @@ class _AdminDashboardState extends State<AdminDashboard> {
               ? const Center(
                   child: CircularProgressIndicator(color: Color(0xFFB71C1C)),
                 )
-              : _buildStatsRow(),
+              : _buildStatsRow(isDesktop), // Ipinasa natin ang isDesktop dito
           const SizedBox(height: 32),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                flex: 2,
-                child: _buildPlaceholderChart('Request Volume Trend'),
-              ),
-              const SizedBox(width: 24),
-              Expanded(
-                flex: 1,
-                child: _buildPlaceholderChart('Status Distribution'),
-              ),
-            ],
-          ),
+
+          // CHARTS SECTION (Magiging patayo pag mobile)
+          isDesktop
+              ? Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      flex: 2,
+                      child: _buildPlaceholderChart('Request Volume Trend'),
+                    ),
+                    const SizedBox(width: 24),
+                    Expanded(
+                      flex: 1,
+                      child: _buildPlaceholderChart('Status Distribution'),
+                    ),
+                  ],
+                )
+              : Column(
+                  children: [
+                    _buildPlaceholderChart('Request Volume Trend'),
+                    const SizedBox(height: 16),
+                    _buildPlaceholderChart('Status Distribution'),
+                  ],
+                ),
+
           const SizedBox(height: 32),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                flex: 2,
-                child: _buildPlaceholderTable('Upcoming Appointments'),
-              ),
-              const SizedBox(width: 24),
-              Expanded(flex: 1, child: _buildRecentActivity()),
-            ],
-          ),
+
+          // TABLES & RECENT ACTIVITY SECTION (Magiging patayo pag mobile)
+          isDesktop
+              ? Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      flex: 2,
+                      child: _buildPlaceholderTable('Upcoming Appointments'),
+                    ),
+                    const SizedBox(width: 24),
+                    Expanded(flex: 1, child: _buildRecentActivity()),
+                  ],
+                )
+              : Column(
+                  children: [
+                    _buildPlaceholderTable('Upcoming Appointments'),
+                    const SizedBox(height: 16),
+                    _buildRecentActivity(),
+                  ],
+                ),
         ],
       ),
     );
   }
 
   Widget _buildHeader() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    // GINAWANG WRAP PARA BUMABA ANG BUTTON KUNG HINDI KASYA SA MOBILE
+    return Wrap(
+      alignment: WrapAlignment.spaceBetween,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      spacing: 16,
+      runSpacing: 16,
       children: [
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -149,39 +179,69 @@ class _AdminDashboardState extends State<AdminDashboard> {
     );
   }
 
-  Widget _buildStatsRow() {
-    return Row(
-      children: [
-        Expanded(
-          child: _buildStatCard(
+  Widget _buildStatsRow(bool isDesktop) {
+    // KAPAG NAKA DESKTOP, NAKATABI-TABI (Row)
+    if (isDesktop) {
+      return Row(
+        children: [
+          Expanded(
+            child: _buildStatCard(
+              'TOTAL ACTIVE PRODUCTS',
+              _totalProducts.toString(),
+              Icons.inventory_2_outlined,
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: _buildStatCard(
+              'TOTAL SERVICES',
+              _totalServices.toString(),
+              Icons.design_services_outlined,
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: _buildStatCard(
+              'PENDING SERVICE REQS',
+              _pendingRequests.toString(),
+              Icons.description_outlined,
+              isHighlight: true,
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: _buildStatCard('TOTAL CUSTOMERS', '0', Icons.people_outline),
+          ),
+        ],
+      );
+    }
+    // KAPAG NAKA MOBILE, MAGPAPATONG-PATONG (Column) PARA DI MA-SQUEEZE
+    else {
+      return Column(
+        children: [
+          _buildStatCard(
             'TOTAL ACTIVE PRODUCTS',
             _totalProducts.toString(),
             Icons.inventory_2_outlined,
           ),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: _buildStatCard(
+          const SizedBox(height: 16),
+          _buildStatCard(
             'TOTAL SERVICES',
             _totalServices.toString(),
             Icons.design_services_outlined,
           ),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: _buildStatCard(
+          const SizedBox(height: 16),
+          _buildStatCard(
             'PENDING SERVICE REQS',
             _pendingRequests.toString(),
             Icons.description_outlined,
             isHighlight: true,
           ),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: _buildStatCard('TOTAL CUSTOMERS', '0', Icons.people_outline),
-        ), // Placeholder for Customers
-      ],
-    );
+          const SizedBox(height: 16),
+          _buildStatCard('TOTAL CUSTOMERS', '0', Icons.people_outline),
+        ],
+      );
+    }
   }
 
   Widget _buildStatCard(
@@ -191,6 +251,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
     bool isHighlight = false,
   }) {
     return Container(
+      width: double.infinity, // PARA SAKUPIN ANG BUONG LAPAD SA MOBILE
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -243,6 +304,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
 
   Widget _buildRecentActivity() {
     return Container(
+      width: double.infinity,
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -313,6 +375,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
   Widget _buildPlaceholderChart(String title) {
     return Container(
       height: 250,
+      width: double.infinity,
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -342,6 +405,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
   Widget _buildPlaceholderTable(String title) {
     return Container(
       height: 250,
+      width: double.infinity,
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         color: Colors.white,

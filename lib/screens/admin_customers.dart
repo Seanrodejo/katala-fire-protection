@@ -21,7 +21,6 @@ class _AdminCustomersState extends State<AdminCustomers> {
     _fetchCustomers();
   }
 
-  // Kumukuha ito ng data mula sa bago nating 'customers' table!
   Future<void> _fetchCustomers() async {
     setState(() => _isLoading = true);
     try {
@@ -70,9 +69,11 @@ class _AdminCustomersState extends State<AdminCustomers> {
 
   @override
   Widget build(BuildContext context) {
+    final isDesktop = MediaQuery.of(context).size.width > 800;
+
     return Container(
-      margin: const EdgeInsets.all(24.0),
-      padding: const EdgeInsets.all(32.0),
+      margin: EdgeInsets.all(isDesktop ? 24.0 : 16.0),
+      padding: EdgeInsets.all(isDesktop ? 32.0 : 16.0),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(8),
@@ -80,8 +81,12 @@ class _AdminCustomersState extends State<AdminCustomers> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          // WRAP PARA SA RESPONSIVE HEADER
+          Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: 16,
+            runSpacing: 16,
             children: [
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -150,169 +155,194 @@ class _AdminCustomersState extends State<AdminCustomers> {
           ),
           const SizedBox(height: 16),
 
-          // TABLE HEADER
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: const BoxDecoration(
-              border: Border(
-                bottom: BorderSide(color: Color(0xFFE0E0E0), width: 2),
-              ),
-            ),
-            child: Row(
-              children: const [
-                Expanded(
-                  flex: 2,
-                  child: Text(
-                    'ACCOUNT ID',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 10,
-                      color: Colors.grey,
-                    ),
-                  ),
-                ),
-                Expanded(
-                  flex: 3,
-                  child: Text(
-                    'FULL NAME',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 10,
-                      color: Colors.grey,
-                    ),
-                  ),
-                ),
-                Expanded(
-                  flex: 3,
-                  child: Text(
-                    'EMAIL ADDRESS',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 10,
-                      color: Colors.grey,
-                    ),
-                  ),
-                ),
-                Expanded(
-                  flex: 2,
-                  child: Text(
-                    'CONTACT NUMBER',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 10,
-                      color: Colors.grey,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // TABLE BODY
+          // RESPONSIVE TABLE WRAPPED IN HORIZONTAL SCROLL
           Expanded(
-            child: _isLoading
-                ? const Center(
-                    child: CircularProgressIndicator(color: Color(0xFFB71C1C)),
-                  )
-                : _filteredCustomers.isEmpty
-                ? const Center(
-                    child: Text(
-                      'No registered accounts found.',
-                      style: TextStyle(color: Colors.grey),
-                    ),
-                  )
-                : ListView.builder(
-                    itemCount: _filteredCustomers.length,
-                    itemBuilder: (context, index) {
-                      final customer = _filteredCustomers[index];
-                      final String id = customer['id'] ?? 'N/A';
-                      final String shortId = id.length > 8
-                          ? id.substring(0, 8).toUpperCase()
-                          : id;
-                      final String fullName =
-                          '${customer['first_name'] ?? ''} ${customer['last_name'] ?? ''}'
-                              .trim();
-
-                      return Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 16,
-                        ),
-                        decoration: const BoxDecoration(
-                          border: Border(
-                            bottom: BorderSide(color: Color(0xFFF0F0F0)),
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: SizedBox(
+                width: 800, // MINIMUM WIDTH PARA HINDI MAG-SQUEEZE
+                child: Column(
+                  children: [
+                    // TABLE HEADER
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
+                      decoration: const BoxDecoration(
+                        border: Border(
+                          bottom: BorderSide(
+                            color: Color(0xFFE0E0E0),
+                            width: 2,
                           ),
                         ),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              flex: 2,
-                              child: Text(
-                                '#$shortId',
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
-                                  color: Color(0xFF999999),
-                                ),
+                      ),
+                      child: Row(
+                        children: const [
+                          Expanded(
+                            flex: 2,
+                            child: Text(
+                              'ACCOUNT ID',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 10,
+                                color: Colors.grey,
                               ),
                             ),
-                            Expanded(
-                              flex: 3,
-                              child: Row(
-                                children: [
-                                  CircleAvatar(
-                                    radius: 16,
-                                    backgroundColor: const Color(0xFFFFF0F0),
-                                    child: Text(
-                                      fullName.isNotEmpty
-                                          ? fullName[0].toUpperCase()
-                                          : '?',
-                                      style: const TextStyle(
-                                        color: Color(0xFFB71C1C),
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 12,
+                          ),
+                          Expanded(
+                            flex: 3,
+                            child: Text(
+                              'FULL NAME',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 10,
+                                color: Colors.grey,
+                              ),
+                            ),
+                          ),
+                          Expanded(
+                            flex: 3,
+                            child: Text(
+                              'EMAIL ADDRESS',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 10,
+                                color: Colors.grey,
+                              ),
+                            ),
+                          ),
+                          Expanded(
+                            flex: 2,
+                            child: Text(
+                              'CONTACT NUMBER',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 10,
+                                color: Colors.grey,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    // TABLE BODY
+                    Expanded(
+                      child: _isLoading
+                          ? const Center(
+                              child: CircularProgressIndicator(
+                                color: Color(0xFFB71C1C),
+                              ),
+                            )
+                          : _filteredCustomers.isEmpty
+                          ? const Center(
+                              child: Text(
+                                'No registered accounts found.',
+                                style: TextStyle(color: Colors.grey),
+                              ),
+                            )
+                          : ListView.builder(
+                              itemCount: _filteredCustomers.length,
+                              itemBuilder: (context, index) {
+                                final customer = _filteredCustomers[index];
+                                final String id = customer['id'] ?? 'N/A';
+                                final String shortId = id.length > 8
+                                    ? id.substring(0, 8).toUpperCase()
+                                    : id;
+                                final String fullName =
+                                    '${customer['first_name'] ?? ''} ${customer['last_name'] ?? ''}'
+                                        .trim();
+
+                                return Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 16,
+                                  ),
+                                  decoration: const BoxDecoration(
+                                    border: Border(
+                                      bottom: BorderSide(
+                                        color: Color(0xFFF0F0F0),
                                       ),
                                     ),
                                   ),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: Text(
-                                      fullName,
-                                      style: const TextStyle(
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.w600,
-                                        color: Color(0xFF1A1A1A),
+                                  child: Row(
+                                    children: [
+                                      Expanded(
+                                        flex: 2,
+                                        child: Text(
+                                          '#$shortId',
+                                          style: const TextStyle(
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.bold,
+                                            color: Color(0xFF999999),
+                                          ),
+                                        ),
                                       ),
-                                    ),
+                                      Expanded(
+                                        flex: 3,
+                                        child: Row(
+                                          children: [
+                                            CircleAvatar(
+                                              radius: 16,
+                                              backgroundColor: const Color(
+                                                0xFFFFF0F0,
+                                              ),
+                                              child: Text(
+                                                fullName.isNotEmpty
+                                                    ? fullName[0].toUpperCase()
+                                                    : '?',
+                                                style: const TextStyle(
+                                                  color: Color(0xFFB71C1C),
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 12,
+                                                ),
+                                              ),
+                                            ),
+                                            const SizedBox(width: 12),
+                                            Expanded(
+                                              child: Text(
+                                                fullName,
+                                                style: const TextStyle(
+                                                  fontSize: 13,
+                                                  fontWeight: FontWeight.w600,
+                                                  color: Color(0xFF1A1A1A),
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      Expanded(
+                                        flex: 3,
+                                        child: Text(
+                                          customer['email'] ?? 'N/A',
+                                          style: const TextStyle(
+                                            fontSize: 13,
+                                            color: Color(0xFF666666),
+                                          ),
+                                        ),
+                                      ),
+                                      Expanded(
+                                        flex: 2,
+                                        child: Text(
+                                          customer['contact_number'] ?? 'N/A',
+                                          style: const TextStyle(
+                                            fontSize: 13,
+                                            color: Color(0xFF666666),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                ],
-                              ),
+                                );
+                              },
                             ),
-                            Expanded(
-                              flex: 3,
-                              child: Text(
-                                customer['email'] ?? 'N/A',
-                                style: const TextStyle(
-                                  fontSize: 13,
-                                  color: Color(0xFF666666),
-                                ),
-                              ),
-                            ),
-                            Expanded(
-                              flex: 2,
-                              child: Text(
-                                customer['contact_number'] ?? 'N/A',
-                                style: const TextStyle(
-                                  fontSize: 13,
-                                  color: Color(0xFF666666),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    },
-                  ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ),
         ],
       ),

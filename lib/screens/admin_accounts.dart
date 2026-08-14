@@ -26,11 +26,11 @@ class _AdminAccountsState extends State<AdminAccounts> {
           .from('customers')
           .select()
           .order('created_at', ascending: false);
-      if (mounted)
+      if (mounted) {
         setState(() => _accounts = List<Map<String, dynamic>>.from(response));
+      }
     } catch (e) {
-      // PINALABAS NATIN YUNG ERROR SA SCREEN PARA MAKITA MO
-      if (mounted)
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Database Error: $e'),
@@ -38,6 +38,7 @@ class _AdminAccountsState extends State<AdminAccounts> {
             duration: const Duration(seconds: 5),
           ),
         );
+      }
       debugPrint('Error: $e');
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -46,9 +47,11 @@ class _AdminAccountsState extends State<AdminAccounts> {
 
   @override
   Widget build(BuildContext context) {
+    final isDesktop = MediaQuery.of(context).size.width > 800;
+
     return Container(
-      margin: const EdgeInsets.all(24.0),
-      padding: const EdgeInsets.all(32.0),
+      margin: EdgeInsets.all(isDesktop ? 24.0 : 16.0),
+      padding: EdgeInsets.all(isDesktop ? 32.0 : 16.0),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(8),
@@ -56,8 +59,12 @@ class _AdminAccountsState extends State<AdminAccounts> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          // RESPONSIVE HEADER GINAMITAN NG WRAP
+          Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: 16,
+            runSpacing: 16,
             children: [
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -92,111 +99,142 @@ class _AdminAccountsState extends State<AdminAccounts> {
             ],
           ),
           const SizedBox(height: 32),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: const BoxDecoration(
-              border: Border(
-                bottom: BorderSide(color: Color(0xFFE0E0E0), width: 2),
-              ),
-            ),
-            child: Row(
-              children: const [
-                Expanded(
-                  flex: 3,
-                  child: Text(
-                    'FULL NAME',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 10,
-                      color: Colors.grey,
-                    ),
-                  ),
-                ),
-                Expanded(
-                  flex: 3,
-                  child: Text(
-                    'EMAIL ADDRESS',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 10,
-                      color: Colors.grey,
-                    ),
-                  ),
-                ),
-                Expanded(
-                  flex: 2,
-                  child: Text(
-                    'CONTACT NUMBER',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 10,
-                      color: Colors.grey,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
+
+          // TABLE NA MAY HORIZONTAL SCROLL PARA SA MOBILE
           Expanded(
-            child: _isLoading
-                ? const Center(
-                    child: CircularProgressIndicator(color: Color(0xFFB71C1C)),
-                  )
-                : _accounts.isEmpty
-                ? const Center(
-                    child: Text(
-                      'No registered accounts yet.',
-                      style: TextStyle(color: Colors.grey),
-                    ),
-                  )
-                : ListView.builder(
-                    itemCount: _accounts.length,
-                    itemBuilder: (context, index) {
-                      final acc = _accounts[index];
-                      final fullName =
-                          '${acc['first_name'] ?? ''} ${acc['last_name'] ?? ''}'
-                              .trim();
-                      return Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 16,
-                        ),
-                        decoration: const BoxDecoration(
-                          border: Border(
-                            bottom: BorderSide(color: Color(0xFFF0F0F0)),
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: SizedBox(
+                width: 700, // MINIMUM WIDTH PARA HINDI MAG-SQUEEZE
+                child: Column(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
+                      decoration: const BoxDecoration(
+                        border: Border(
+                          bottom: BorderSide(
+                            color: Color(0xFFE0E0E0),
+                            width: 2,
                           ),
                         ),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              flex: 3,
-                              child: Text(
-                                fullName,
-                                style: const TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.bold,
-                                ),
+                      ),
+                      child: Row(
+                        children: const [
+                          Expanded(
+                            flex: 3,
+                            child: Text(
+                              'FULL NAME',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 10,
+                                color: Colors.grey,
                               ),
                             ),
-                            Expanded(
-                              flex: 3,
-                              child: Text(
-                                acc['email'] ?? 'N/A',
-                                style: const TextStyle(fontSize: 13),
+                          ),
+                          Expanded(
+                            flex: 3,
+                            child: Text(
+                              'EMAIL ADDRESS',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 10,
+                                color: Colors.grey,
                               ),
                             ),
-                            Expanded(
-                              flex: 2,
-                              child: Text(
-                                acc['contact_number'] ?? 'N/A',
-                                style: const TextStyle(fontSize: 13),
+                          ),
+                          Expanded(
+                            flex: 2,
+                            child: Text(
+                              'CONTACT NUMBER',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 10,
+                                color: Colors.grey,
                               ),
                             ),
-                          ],
-                        ),
-                      );
-                    },
-                  ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Expanded(
+                      child: _isLoading
+                          ? const Center(
+                              child: CircularProgressIndicator(
+                                color: Color(0xFFB71C1C),
+                              ),
+                            )
+                          : _accounts.isEmpty
+                          ? const Center(
+                              child: Text(
+                                'No registered accounts yet.',
+                                style: TextStyle(color: Colors.grey),
+                              ),
+                            )
+                          : ListView.builder(
+                              itemCount: _accounts.length,
+                              itemBuilder: (context, index) {
+                                final acc = _accounts[index];
+                                final fullName =
+                                    '${acc['first_name'] ?? ''} ${acc['last_name'] ?? ''}'
+                                        .trim();
+                                return Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 16,
+                                  ),
+                                  decoration: const BoxDecoration(
+                                    border: Border(
+                                      bottom: BorderSide(
+                                        color: Color(0xFFF0F0F0),
+                                      ),
+                                    ),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Expanded(
+                                        flex: 3,
+                                        child: Text(
+                                          fullName,
+                                          style: const TextStyle(
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.bold,
+                                            color: Color(0xFF1A1A1A),
+                                          ),
+                                        ),
+                                      ),
+                                      Expanded(
+                                        flex: 3,
+                                        child: Text(
+                                          acc['email'] ?? 'N/A',
+                                          style: const TextStyle(
+                                            fontSize: 13,
+                                            color: Color(0xFF666666),
+                                          ),
+                                        ),
+                                      ),
+                                      Expanded(
+                                        flex: 2,
+                                        child: Text(
+                                          acc['contact_number'] ?? 'N/A',
+                                          style: const TextStyle(
+                                            fontSize: 13,
+                                            color: Color(0xFF666666),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              },
+                            ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ),
         ],
       ),

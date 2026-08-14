@@ -41,10 +41,11 @@ class _AdminServicesState extends State<AdminServices> {
         _filteredServices = _allServices;
       });
     } catch (e) {
-      if (mounted)
+      if (mounted) {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text('Error: $e')));
+      }
     } finally {
       setState(() => _isLoading = false);
     }
@@ -75,7 +76,7 @@ class _AdminServicesState extends State<AdminServices> {
     );
     final imageController = TextEditingController(
       text: isEditing ? service['image_url'] : '',
-    ); // BAGONG CONTROLLER
+    );
 
     String selectedCategory =
         (isEditing && _serviceCategories.contains(service['category']))
@@ -129,7 +130,6 @@ class _AdminServicesState extends State<AdminServices> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                // BAGONG TEXTFIELD PARA SA IMAGE URL
                 TextField(
                   controller: imageController,
                   decoration: const InputDecoration(
@@ -153,8 +153,7 @@ class _AdminServicesState extends State<AdminServices> {
                   'service_name': nameController.text,
                   'category': selectedCategory,
                   'description': descController.text,
-                  'image_url':
-                      imageController.text, // IPAPASOK NA ANG IMAGE URL SA DB
+                  'image_url': imageController.text,
                 };
 
                 try {
@@ -217,8 +216,12 @@ class _AdminServicesState extends State<AdminServices> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          // BINALOT NATIN SA WRAP PARA HINDI MA-CUT ANG BUTTON SA MOBILE
+          Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: 16,
+            runSpacing: 16,
             children: [
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -276,155 +279,181 @@ class _AdminServicesState extends State<AdminServices> {
             ],
           ),
           const SizedBox(height: 16),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: const BoxDecoration(
-              border: Border(
-                bottom: BorderSide(color: Color(0xFFE0E0E0), width: 2),
-              ),
-            ),
-            child: Row(
-              children: const [
-                Expanded(
-                  flex: 3,
-                  child: Text(
-                    'SERVICE NAME',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 10,
-                      color: Colors.grey,
-                    ),
-                  ),
-                ),
-                Expanded(
-                  flex: 2,
-                  child: Text(
-                    'CATEGORY',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 10,
-                      color: Colors.grey,
-                    ),
-                  ),
-                ),
-                Expanded(
-                  flex: 4,
-                  child: Text(
-                    'DESCRIPTION',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 10,
-                      color: Colors.grey,
-                    ),
-                  ),
-                ),
-                Expanded(
-                  flex: 1,
-                  child: Text(
-                    'ACTIONS',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 10,
-                      color: Colors.grey,
-                    ),
-                    textAlign: TextAlign.right,
-                  ),
-                ),
-              ],
-            ),
-          ),
+          // BINALOT ANG HEADER AT LIST SA ISANG HORIZONTAL SCROLLVIEW
           Expanded(
-            child: _isLoading
-                ? const Center(
-                    child: CircularProgressIndicator(color: Color(0xFFB71C1C)),
-                  )
-                : _filteredServices.isEmpty
-                ? const Center(
-                    child: Text(
-                      'No services match your search.',
-                      style: TextStyle(color: Colors.grey),
-                    ),
-                  )
-                : ListView.builder(
-                    itemCount: _filteredServices.length,
-                    itemBuilder: (context, index) {
-                      final service = _filteredServices[index];
-                      return Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 12,
-                        ),
-                        decoration: const BoxDecoration(
-                          border: Border(
-                            bottom: BorderSide(color: Color(0xFFF0F0F0)),
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: SizedBox(
+                width: 800, // MINIMUM WIDTH PARA HINDI MA-SQUEEZE
+                child: Column(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
+                      decoration: const BoxDecoration(
+                        border: Border(
+                          bottom: BorderSide(
+                            color: Color(0xFFE0E0E0),
+                            width: 2,
                           ),
                         ),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              flex: 3,
-                              child: Text(
-                                service['service_name'] ?? '',
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 13,
-                                  color: Color(0xFF1A1A1A),
-                                ),
+                      ),
+                      child: Row(
+                        children: const [
+                          Expanded(
+                            flex: 3,
+                            child: Text(
+                              'SERVICE NAME',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 10,
+                                color: Colors.grey,
                               ),
                             ),
-                            Expanded(
-                              flex: 2,
-                              child: Text(
-                                service['category'] ?? '',
-                                style: const TextStyle(
-                                  fontSize: 13,
-                                  color: Color(0xFF666666),
-                                ),
+                          ),
+                          Expanded(
+                            flex: 2,
+                            child: Text(
+                              'CATEGORY',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 10,
+                                color: Colors.grey,
                               ),
                             ),
-                            Expanded(
-                              flex: 4,
-                              child: Text(
-                                service['description'] ?? '',
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  color: Color(0xFF999999),
-                                ),
+                          ),
+                          Expanded(
+                            flex: 4,
+                            child: Text(
+                              'DESCRIPTION',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 10,
+                                color: Colors.grey,
                               ),
                             ),
-                            Expanded(
-                              flex: 1,
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.end,
-                                children: [
-                                  IconButton(
-                                    icon: const Icon(
-                                      Icons.edit_outlined,
-                                      color: Colors.blue,
-                                      size: 18,
-                                    ),
-                                    onPressed: () =>
-                                        _showServiceDialog(service: service),
+                          ),
+                          Expanded(
+                            flex: 1,
+                            child: Text(
+                              'ACTIONS',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 10,
+                                color: Colors.grey,
+                              ),
+                              textAlign: TextAlign.right,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Expanded(
+                      child: _isLoading
+                          ? const Center(
+                              child: CircularProgressIndicator(
+                                color: Color(0xFFB71C1C),
+                              ),
+                            )
+                          : _filteredServices.isEmpty
+                          ? const Center(
+                              child: Text(
+                                'No services match your search.',
+                                style: TextStyle(color: Colors.grey),
+                              ),
+                            )
+                          : ListView.builder(
+                              itemCount: _filteredServices.length,
+                              itemBuilder: (context, index) {
+                                final service = _filteredServices[index];
+                                return Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 12,
                                   ),
-                                  IconButton(
-                                    icon: const Icon(
-                                      Icons.delete_outline,
-                                      color: Colors.red,
-                                      size: 18,
+                                  decoration: const BoxDecoration(
+                                    border: Border(
+                                      bottom: BorderSide(
+                                        color: Color(0xFFF0F0F0),
+                                      ),
                                     ),
-                                    onPressed: () =>
-                                        _deleteService(service['id']),
                                   ),
-                                ],
-                              ),
+                                  child: Row(
+                                    children: [
+                                      Expanded(
+                                        flex: 3,
+                                        child: Text(
+                                          service['service_name'] ?? '',
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 13,
+                                            color: Color(0xFF1A1A1A),
+                                          ),
+                                        ),
+                                      ),
+                                      Expanded(
+                                        flex: 2,
+                                        child: Text(
+                                          service['category'] ?? '',
+                                          style: const TextStyle(
+                                            fontSize: 13,
+                                            color: Color(0xFF666666),
+                                          ),
+                                        ),
+                                      ),
+                                      Expanded(
+                                        flex: 4,
+                                        child: Text(
+                                          service['description'] ?? '',
+                                          maxLines: 2,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: const TextStyle(
+                                            fontSize: 12,
+                                            color: Color(0xFF999999),
+                                          ),
+                                        ),
+                                      ),
+                                      Expanded(
+                                        flex: 1,
+                                        child: Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.end,
+                                          children: [
+                                            IconButton(
+                                              icon: const Icon(
+                                                Icons.edit_outlined,
+                                                color: Colors.blue,
+                                                size: 18,
+                                              ),
+                                              onPressed: () =>
+                                                  _showServiceDialog(
+                                                    service: service,
+                                                  ),
+                                            ),
+                                            IconButton(
+                                              icon: const Icon(
+                                                Icons.delete_outline,
+                                                color: Colors.red,
+                                                size: 18,
+                                              ),
+                                              onPressed: () =>
+                                                  _deleteService(service['id']),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              },
                             ),
-                          ],
-                        ),
-                      );
-                    },
-                  ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ),
         ],
       ),
