@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'main_layout.dart';
+import 'admin_layout.dart'; // IN-IMPORT NATIN ANG ADMIN LAYOUT DITO
 
 class AuthPage extends StatefulWidget {
   const AuthPage({super.key});
@@ -25,19 +26,54 @@ class _AuthPageState extends State<AuthPage> {
     setState(() => _isLoading = true);
     try {
       if (_isLogin) {
-        // LOGIN LOGIC
-        await _supabase.auth.signInWithPassword(
+        // ==========================================
+        // LOGIN LOGIC WITH ROLE-BASED ROUTING
+        // ==========================================
+        final authResponse = await _supabase.auth.signInWithPassword(
           email: _emailController.text.trim(),
           password: _passwordController.text,
         );
-        if (mounted) {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => const MainLayout()),
-          );
+
+        final user = authResponse.user;
+
+        if (user != null) {
+          bool isAdmin = false;
+
+          // CHECK KUNG NASA ADMIN_ACCOUNTS TABLE ANG EMAIL NILA
+          try {
+            final adminData = await _supabase
+                .from('admin_accounts')
+                .select()
+                .eq('email', user.email!)
+                .maybeSingle();
+
+            if (adminData != null) {
+              isAdmin = true;
+            }
+          } catch (adminCheckError) {
+            debugPrint('Error checking admin role: $adminCheckError');
+          }
+
+          if (mounted) {
+            if (isAdmin) {
+              // KUNG ADMIN, ROUTE TO ADMIN PORTAL
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => const AdminLayout()),
+              );
+            } else {
+              // KUNG NORMAL USER, ROUTE TO CUSTOMER PORTAL
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => const MainLayout()),
+              );
+            }
+          }
         }
       } else {
+        // ==========================================
         // SIGN UP LOGIC
+        // ==========================================
         if (_passwordController.text != _confirmPasswordController.text) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -59,7 +95,6 @@ class _AuthPageState extends State<AuthPage> {
         );
 
         if (mounted && response.user != null) {
-          // DITO PAPASOK YUNG LOGIC NA ISE-SAVE NATIN SA CUSTOMERS TABLE ANG ACCOUNT NILA
           try {
             await _supabase.from('customers').insert({
               'id': response.user!.id,

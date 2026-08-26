@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ServicesPage extends StatefulWidget {
-  const ServicesPage({super.key});
+  final VoidCallback onStartInquiry; // DINAGDAG NATIN ITO PARA MA-LINK SA FORM
+
+  const ServicesPage({super.key, required this.onStartInquiry});
 
   @override
   State<ServicesPage> createState() => _ServicesPageState();
@@ -107,6 +109,26 @@ class _ServicesPageState extends State<ServicesPage> {
               onPressed: () => Navigator.pop(context),
               child: const Text('Close', style: TextStyle(color: Colors.grey)),
             ),
+            // DINAGDAG DIN NATIN ANG INQUIRY BUTTON SA LOOB NG DIALOG
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context); // Close dialog first
+                widget.onStartInquiry(); // Open inquiry form
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFB71C1C),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(6),
+                ),
+              ),
+              child: const Text(
+                'Start Inquiry',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
           ],
         );
       },
@@ -122,7 +144,7 @@ class _ServicesPageState extends State<ServicesPage> {
           _buildHeaderSection(),
           _buildTabs(),
           _buildServicesList(),
-          _buildFooter(), // DARK FOOTER
+          _buildFooter(),
         ],
       ),
     );
@@ -145,7 +167,7 @@ class _ServicesPageState extends State<ServicesPage> {
           ),
           SizedBox(height: 12),
           Text(
-            'Comprehensive life-safety solutions engineered for maximum reliability and BFP compliance.',
+            'Comprehensive life-safety solutions engineered for maximum reliability and BFP compliance. Select a service to start your project inquiry.',
             style: TextStyle(
               fontSize: 12,
               color: Color(0xFF666666),
@@ -202,14 +224,17 @@ class _ServicesPageState extends State<ServicesPage> {
       child: FutureBuilder<List<Map<String, dynamic>>>(
         future: _fetchServices(),
         builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting)
+          if (snapshot.connectionState == ConnectionState.waiting) {
             return const Padding(
               padding: EdgeInsets.symmetric(vertical: 40.0),
               child: Center(
                 child: CircularProgressIndicator(color: Color(0xFFB71C1C)),
               ),
             );
-          if (snapshot.hasError || !snapshot.hasData || snapshot.data!.isEmpty)
+          }
+          if (snapshot.hasError ||
+              !snapshot.hasData ||
+              snapshot.data!.isEmpty) {
             return const Padding(
               padding: EdgeInsets.symmetric(vertical: 40.0),
               child: Center(
@@ -219,12 +244,13 @@ class _ServicesPageState extends State<ServicesPage> {
                 ),
               ),
             );
+          }
 
           var services = snapshot.data!
               .where((s) => s['category'] == _selectedTab)
               .toList();
 
-          if (services.isEmpty)
+          if (services.isEmpty) {
             return const Padding(
               padding: EdgeInsets.symmetric(vertical: 40.0),
               child: Center(
@@ -234,6 +260,7 @@ class _ServicesPageState extends State<ServicesPage> {
                 ),
               ),
             );
+          }
 
           return Column(
             children: services.map((service) {
@@ -243,10 +270,12 @@ class _ServicesPageState extends State<ServicesPage> {
               final imageUrl = service['image_url'] ?? '';
 
               IconData serviceIcon = Icons.build_circle_outlined;
-              if (title.toLowerCase().contains('sprinkler'))
+              if (title.toLowerCase().contains('sprinkler')) {
                 serviceIcon = Icons.shower_outlined;
-              if (title.toLowerCase().contains('alarm'))
+              }
+              if (title.toLowerCase().contains('alarm')) {
                 serviceIcon = Icons.sensors;
+              }
 
               return Container(
                 margin: const EdgeInsets.only(bottom: 16),
@@ -304,28 +333,59 @@ class _ServicesPageState extends State<ServicesPage> {
                       ],
                     ),
                     const SizedBox(height: 16),
-                    SizedBox(
-                      width: double.infinity,
-                      child: OutlinedButton(
-                        onPressed: () => _showServiceDetails(
-                          context,
-                          title,
-                          desc,
-                          cat,
-                          imageUrl,
-                        ),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: const Color(0xFFB71C1C),
-                          side: const BorderSide(color: Color(0xFFB71C1C)),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(6),
+                    // IN-UPDATE NATIN ANG BUTTONS DITO PARA DALAWA NA
+                    Row(
+                      children: [
+                        Expanded(
+                          flex: 1,
+                          child: OutlinedButton(
+                            onPressed: () => _showServiceDetails(
+                              context,
+                              title,
+                              desc,
+                              cat,
+                              imageUrl,
+                            ),
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: const Color(0xFF666666),
+                              side: const BorderSide(color: Color(0xFFE0E0E0)),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                            ),
+                            child: const Text(
+                              'Details',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
                           ),
                         ),
-                        child: const Text(
-                          'View Details',
-                          style: TextStyle(fontWeight: FontWeight.bold),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          flex: 2,
+                          child: ElevatedButton.icon(
+                            onPressed: widget
+                                .onStartInquiry, // ETO YUNG MAGBUBUKAS NG FORM
+                            icon: const Icon(
+                              Icons.arrow_forward,
+                              size: 16,
+                              color: Colors.white,
+                            ),
+                            label: const Text(
+                              'Start Inquiry',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFFB71C1C),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                            ),
+                          ),
                         ),
-                      ),
+                      ],
                     ),
                   ],
                 ),
@@ -337,7 +397,6 @@ class _ServicesPageState extends State<ServicesPage> {
     );
   }
 
-  // UNIFORM DARK FOOTER
   Widget _buildFooter() {
     return Container(
       width: double.infinity,

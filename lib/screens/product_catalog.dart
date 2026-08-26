@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'dart:math'; // Para sa Order Reference Number
 
 class ProductCatalog extends StatefulWidget {
   const ProductCatalog({super.key});
@@ -31,104 +32,504 @@ class _ProductCatalogState extends State<ProductCatalog> {
     return List<Map<String, dynamic>>.from(response);
   }
 
-  void _showProductDetails(
-    BuildContext context,
-    String name,
-    String sku,
-    String category,
-    String status,
-    String imageUrl,
-  ) {
+  // 1. PRODUCT DETAILS WITH QUANTITY AND FULFILLMENT SELECTION
+  void _showProductDetails(BuildContext context, Map<String, dynamic> product) {
+    int quantity = 1;
+    String fulfillmentMethod = 'Delivery';
+
+    // Parse price safely (fallback to 0 if not set in DB yet)
+    double price = double.tryParse(product['price']?.toString() ?? '0') ?? 0.0;
+
+    final String sku = product['sku'] ?? 'N/A';
+    final String name = product['name'] ?? 'Unknown Product';
+    final String category = product['category'] ?? 'General';
+    final String status = product['stock_status'] ?? 'UNKNOWN';
+    final String imageUrl =
+        (product['image_url'] != null &&
+            product['image_url'].toString().isNotEmpty)
+        ? product['image_url']
+        : 'https://images.unsplash.com/photo-1629853904944-11883395b035?q=80&w=200&auto=format&fit=crop';
+
     showDialog(
       context: context,
       builder: (context) {
-        return Dialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          backgroundColor: Colors.white,
-          child: Padding(
-            padding: const EdgeInsets.all(24.0),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            double totalPrice = price * quantity;
+
+            return Dialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              backgroundColor: Colors.white,
+              child: SingleChildScrollView(
+                child: Padding(
+                  padding: const EdgeInsets.all(24.0),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            sku,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFFB71C1C),
+                              fontSize: 12,
+                            ),
+                          ),
+                          InkWell(
+                            onTap: () => Navigator.pop(context),
+                            child: const Icon(
+                              Icons.close,
+                              color: Colors.grey,
+                              size: 20,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      Center(
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: Image.network(
+                            imageUrl,
+                            height: 150,
+                            fit: BoxFit.cover,
+                            errorBuilder: (c, e, s) => Container(
+                              height: 150,
+                              color: Colors.grey[200],
+                              child: const Icon(
+                                Icons.image,
+                                color: Colors.grey,
+                                size: 40,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        name,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF1A1A1A),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        price > 0
+                            ? '₱ ${price.toStringAsFixed(2)}'
+                            : 'Price on request',
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFFB71C1C),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      const Divider(),
+
+                      // QUANTITY SELECTOR
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            'Quantity',
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          Row(
+                            children: [
+                              IconButton(
+                                onPressed: () {
+                                  if (quantity > 1) {
+                                    setDialogState(() => quantity--);
+                                  }
+                                },
+                                icon: const Icon(
+                                  Icons.remove_circle_outline,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                              Text(
+                                '$quantity',
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              IconButton(
+                                onPressed: () {
+                                  setDialogState(() => quantity++);
+                                },
+                                icon: const Icon(
+                                  Icons.add_circle_outline,
+                                  color: Color(0xFFB71C1C),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+
+                      // DELIVERY OR PICKUP
+                      const SizedBox(height: 12),
+                      const Text(
+                        'Fulfillment Option',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 8),
+                      DropdownButtonFormField<String>(
+                        value: fulfillmentMethod,
+                        decoration: const InputDecoration(
+                          border: OutlineInputBorder(),
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
+                          ),
+                        ),
+                        items: ['Delivery', 'Store Pickup'].map((method) {
+                          return DropdownMenuItem(
+                            value: method,
+                            child: Text(method),
+                          );
+                        }).toList(),
+                        onChanged: (val) {
+                          if (val != null)
+                            setDialogState(() => fulfillmentMethod = val);
+                        },
+                      ),
+
+                      const SizedBox(height: 24),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: status == 'OUT OF STOCK'
+                              ? null
+                              : () {
+                                  Navigator.pop(
+                                    context,
+                                  ); // Close product details
+                                  _showCheckoutDialog(
+                                    context,
+                                    product,
+                                    quantity,
+                                    fulfillmentMethod,
+                                    totalPrice,
+                                  );
+                                },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: status == 'OUT OF STOCK'
+                                ? Colors.grey
+                                : const Color(0xFFB71C1C),
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                          ),
+                          child: Text(
+                            status == 'OUT OF STOCK'
+                                ? 'Out of Stock'
+                                : 'Proceed to Checkout',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  // 2. CHECKOUT & ORDER SUMMARY FLOW
+  void _showCheckoutDialog(
+    BuildContext context,
+    Map<String, dynamic> product,
+    int quantity,
+    String fulfillment,
+    double totalPrice,
+  ) {
+    final nameController = TextEditingController();
+    final emailController = TextEditingController();
+    final phoneController = TextEditingController();
+    final addressController = TextEditingController();
+    String paymentMethod = 'Bank Transfer';
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setCheckoutState) {
+            return Dialog(
+              insetPadding: const EdgeInsets.all(0), // Full screen feel
+              backgroundColor: Colors.white,
+              child: SafeArea(
+                child: Column(
                   children: [
-                    Text(
-                      sku,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFFB71C1C),
-                        fontSize: 12,
+                    // Header
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: const BoxDecoration(
+                        border: Border(
+                          bottom: BorderSide(color: Color(0xFFEEEEEE)),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.arrow_back),
+                            onPressed: () => Navigator.pop(context),
+                          ),
+                          const Expanded(
+                            child: Text(
+                              'Checkout',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    InkWell(
-                      onTap: () => Navigator.pop(context),
-                      child: const Icon(
-                        Icons.close,
-                        color: Colors.grey,
-                        size: 20,
+
+                    // Form Content
+                    Expanded(
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.all(24),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Order Summary',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                                color: Color(0xFFB71C1C),
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            Container(
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFF5F6FA),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Column(
+                                children: [
+                                  Row(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Expanded(
+                                        child: Text(
+                                          '${product['name']}',
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ),
+                                      Text('x$quantity'),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 8),
+                                  const Divider(),
+                                  const SizedBox(height: 8),
+                                  _buildDetailRow('Fulfillment', fulfillment),
+                                  const SizedBox(height: 8),
+                                  _buildDetailRow(
+                                    'Total Due',
+                                    '₱ ${totalPrice.toStringAsFixed(2)}',
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 24),
+
+                            const Text(
+                              'Contact Information',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            TextField(
+                              controller: nameController,
+                              decoration: const InputDecoration(
+                                labelText: 'Full Name',
+                                border: OutlineInputBorder(),
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            TextField(
+                              controller: emailController,
+                              decoration: const InputDecoration(
+                                labelText: 'Email Address',
+                                border: OutlineInputBorder(),
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            TextField(
+                              controller: phoneController,
+                              decoration: const InputDecoration(
+                                labelText: 'Phone Number',
+                                border: OutlineInputBorder(),
+                              ),
+                            ),
+
+                            if (fulfillment == 'Delivery') ...[
+                              const SizedBox(height: 16),
+                              TextField(
+                                controller: addressController,
+                                maxLines: 2,
+                                decoration: const InputDecoration(
+                                  labelText: 'Delivery Address',
+                                  border: OutlineInputBorder(),
+                                ),
+                              ),
+                            ],
+
+                            const SizedBox(height: 24),
+                            const Text(
+                              'Payment Method',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            DropdownButtonFormField<String>(
+                              value: paymentMethod,
+                              decoration: const InputDecoration(
+                                border: OutlineInputBorder(),
+                              ),
+                              items:
+                                  ['Bank Transfer', 'Cash on Delivery/Pickup']
+                                      .map(
+                                        (m) => DropdownMenuItem(
+                                          value: m,
+                                          child: Text(m),
+                                        ),
+                                      )
+                                      .toList(),
+                              onChanged: (val) {
+                                if (val != null)
+                                  setCheckoutState(() => paymentMethod = val);
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    // Place Order Button
+                    Container(
+                      padding: const EdgeInsets.all(24),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.05),
+                            blurRadius: 10,
+                            offset: const Offset(0, -5),
+                          ),
+                        ],
+                      ),
+                      child: SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: () async {
+                            if (nameController.text.isEmpty ||
+                                phoneController.text.isEmpty) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                    'Please fill in your Name and Phone Number.',
+                                  ),
+                                ),
+                              );
+                              return;
+                            }
+
+                            final String refNo =
+                                'ORD-${Random().nextInt(90000) + 10000}';
+
+                            try {
+                              // Insert sa orders table! (Make sure gagawin natin itong table sa Supabase)
+                              await _supabase.from('orders').insert({
+                                'reference_no': refNo,
+                                'customer_name': nameController.text,
+                                'email': emailController.text,
+                                'contact_number': phoneController.text,
+                                'address': addressController.text,
+                                'product_name': product['name'],
+                                'sku': product['sku'],
+                                'quantity': quantity,
+                                'total_price': totalPrice,
+                                'fulfillment_method': fulfillment,
+                                'payment_method': paymentMethod,
+                                'status': 'Pending Confirmation',
+                              });
+
+                              if (context.mounted) {
+                                Navigator.pop(context); // Close Checkout
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      'Order Placed Successfully! Ref: $refNo',
+                                    ),
+                                    backgroundColor: Colors.green,
+                                    duration: const Duration(seconds: 4),
+                                  ),
+                                );
+                              }
+                            } catch (e) {
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text('Failed to place order: $e'),
+                                    backgroundColor: Colors.red,
+                                  ),
+                                );
+                              }
+                            }
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFFB71C1C),
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          child: const Text(
+                            'Place Order',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
+                        ),
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 16),
-                Center(
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: Image.network(
-                      imageUrl,
-                      height: 150,
-                      fit: BoxFit.cover,
-                      errorBuilder: (c, e, s) => Container(
-                        height: 150,
-                        color: Colors.grey[200],
-                        child: const Icon(
-                          Icons.image,
-                          color: Colors.grey,
-                          size: 40,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  name,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF1A1A1A),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                const Divider(),
-                const SizedBox(height: 8),
-                _buildDetailRow('Category', category),
-                const SizedBox(height: 8),
-                _buildDetailRow('Stock Status', status),
-                const SizedBox(height: 24),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () => Navigator.pop(context),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFB71C1C),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                    ),
-                    child: const Text(
-                      'Close',
-                      style: TextStyle(color: Colors.white),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
+              ),
+            );
+          },
         );
       },
     );
@@ -142,7 +543,7 @@ class _ProductCatalogState extends State<ProductCatalog> {
         Text(
           value,
           style: const TextStyle(
-            fontSize: 12,
+            fontSize: 13,
             fontWeight: FontWeight.bold,
             color: Color(0xFF333333),
           ),
@@ -160,7 +561,7 @@ class _ProductCatalogState extends State<ProductCatalog> {
           _buildHeaderSection(),
           _buildCategoryChips(),
           _buildProductList(),
-          _buildFooter(), // DARK FOOTER
+          _buildFooter(),
         ],
       ),
     );
@@ -253,14 +654,17 @@ class _ProductCatalogState extends State<ProductCatalog> {
       child: FutureBuilder<List<Map<String, dynamic>>>(
         future: _fetchProducts(),
         builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting)
+          if (snapshot.connectionState == ConnectionState.waiting) {
             return const Padding(
               padding: EdgeInsets.symmetric(vertical: 40.0),
               child: Center(
                 child: CircularProgressIndicator(color: Color(0xFFB71C1C)),
               ),
             );
-          if (snapshot.hasError || !snapshot.hasData || snapshot.data!.isEmpty)
+          }
+          if (snapshot.hasError ||
+              !snapshot.hasData ||
+              snapshot.data!.isEmpty) {
             return const Padding(
               padding: EdgeInsets.symmetric(vertical: 40.0),
               child: Center(
@@ -270,6 +674,7 @@ class _ProductCatalogState extends State<ProductCatalog> {
                 ),
               ),
             );
+          }
 
           var products = snapshot.data!;
           if (_selectedCategory != 'All') {
@@ -278,7 +683,7 @@ class _ProductCatalogState extends State<ProductCatalog> {
                 .toList();
           }
 
-          if (products.isEmpty)
+          if (products.isEmpty) {
             return const Padding(
               padding: EdgeInsets.symmetric(vertical: 40.0),
               child: Center(
@@ -288,13 +693,18 @@ class _ProductCatalogState extends State<ProductCatalog> {
                 ),
               ),
             );
+          }
 
           return Column(
             children: products.map((product) {
               final sku = product['sku'] ?? 'N/A';
               final name = product['name'] ?? 'Unknown Product';
               final status = product['stock_status'] ?? 'UNKNOWN';
-              final category = product['category'] ?? 'General';
+
+              // NEW: Kunin ang presyo para idisplay sa card
+              double price =
+                  double.tryParse(product['price']?.toString() ?? '0') ?? 0.0;
+
               final imageUrl =
                   (product['image_url'] != null &&
                       product['image_url'].toString().isNotEmpty)
@@ -382,40 +792,25 @@ class _ProductCatalogState extends State<ProductCatalog> {
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                             ),
-                            const SizedBox(height: 8),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                const Text(
-                                  'Category',
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    color: Color(0xFF666666),
-                                  ),
-                                ),
-                                Text(
-                                  category,
-                                  style: const TextStyle(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.bold,
-                                    color: Color(0xFF333333),
-                                  ),
-                                ),
-                              ],
+                            const SizedBox(height: 4),
+                            // NEW: Price Display
+                            Text(
+                              price > 0
+                                  ? '₱ ${price.toStringAsFixed(2)}'
+                                  : 'Ask for Price',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13,
+                                color: Color(0xFFB71C1C),
+                              ),
                             ),
                             const SizedBox(height: 12),
                             SizedBox(
                               width: double.infinity,
                               height: 32,
                               child: OutlinedButton(
-                                onPressed: () => _showProductDetails(
-                                  context,
-                                  name,
-                                  sku,
-                                  category,
-                                  status,
-                                  imageUrl,
-                                ),
+                                onPressed: () =>
+                                    _showProductDetails(context, product),
                                 style: OutlinedButton.styleFrom(
                                   side: const BorderSide(
                                     color: Color(0xFFE0E0E0),
@@ -429,7 +824,7 @@ class _ProductCatalogState extends State<ProductCatalog> {
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: const [
                                     Text(
-                                      'View Specifications',
+                                      'View Details & Order',
                                       style: TextStyle(
                                         fontSize: 10,
                                         fontWeight: FontWeight.bold,
@@ -438,7 +833,7 @@ class _ProductCatalogState extends State<ProductCatalog> {
                                     ),
                                     SizedBox(width: 4),
                                     Icon(
-                                      Icons.arrow_forward,
+                                      Icons.shopping_cart_checkout,
                                       size: 12,
                                       color: Color(0xFF333333),
                                     ),
@@ -460,7 +855,6 @@ class _ProductCatalogState extends State<ProductCatalog> {
     );
   }
 
-  // UNIFORM DARK FOOTER
   Widget _buildFooter() {
     return Container(
       width: double.infinity,

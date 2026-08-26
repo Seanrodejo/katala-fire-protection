@@ -6,7 +6,8 @@ import 'product_catalog.dart';
 import 'services_page.dart';
 import 'portfolio_page.dart';
 import 'company_profile.dart';
-import 'admin_settings.dart'; // IN-IMPORT NATIN ANG SETTINGS WIDGET DITO
+import 'admin_settings.dart';
+import 'customer_orders.dart'; // IN-IMPORT NATIN YUNG BAGONG GINAWA MO PARA SA ORDERS
 
 class MainLayout extends StatefulWidget {
   const MainLayout({super.key});
@@ -415,11 +416,15 @@ class _MainLayoutState extends State<MainLayout> {
                     title: 'Company Profile',
                     index: 4,
                   ),
-                  // DINAGDAG NA NATIN ANG SETTINGS DITO
                   _buildMenuItem(
                     icon: Icons.settings_outlined,
                     title: 'Settings',
                     index: 5,
+                  ),
+                  _buildMenuItem(
+                    icon: Icons.shopping_bag_outlined,
+                    title: 'My Orders',
+                    index: 6,
                   ),
                   const SizedBox(height: 24),
                   SizedBox(
@@ -490,16 +495,12 @@ class _MainLayoutState extends State<MainLayout> {
                 ],
               ),
             ),
-            // DINAGDAG NA NATIN ANG LOGOUT BUTTON SA IBABA NG DRAWER
             const Divider(color: Color(0xFFEEEEEE), height: 1),
             InkWell(
               onTap: () async {
                 await _supabase.auth.signOut();
                 if (context.mounted) {
-                  Navigator.pushReplacementNamed(
-                    context,
-                    '/',
-                  ); // Palitan ng ruta ng Login mo kung iba
+                  Navigator.pushReplacementNamed(context, '/');
                 }
               },
               child: Padding(
@@ -599,15 +600,20 @@ class _MainLayoutState extends State<MainLayout> {
       case 1:
         return const ProductCatalog();
       case 2:
-        return const ServicesPage();
+        // FIX: DINAGDAG NATIN YUNG onStartInquiry DITO PARA HINDI MAG-ERROR
+        return ServicesPage(
+          onStartInquiry: () => _showRequestQuoteDialog(context),
+        );
       case 3:
         return const PortfolioPage();
       case 4:
         return CompanyProfile(
           onRequestQuote: () => _showRequestQuoteDialog(context),
         );
-      case 5: // DINAGDAG ANG ROUTING PARA SA SETTINGS PAGE
+      case 5:
         return const AdminSettings();
+      case 6:
+        return const CustomerOrders();
       default:
         return Homepage(
           onRequestQuote: () => _showRequestQuoteDialog(context),

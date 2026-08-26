@@ -73,6 +73,10 @@ class _AdminProductsState extends State<AdminProducts> {
     final nameController = TextEditingController(
       text: isEditing ? product['name'] : '',
     );
+    // BAGONG CONTROLLER PARA SA PRICE
+    final priceController = TextEditingController(
+      text: isEditing ? (product['price']?.toString() ?? '0') : '',
+    );
     final imageController = TextEditingController(
       text: isEditing ? product['image_url'] : '',
     );
@@ -112,6 +116,19 @@ class _AdminProductsState extends State<AdminProducts> {
                   decoration: const InputDecoration(
                     labelText: 'Product Name',
                     border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                // BAGONG TEXTFIELD PARA SA PRICE
+                TextField(
+                  controller: priceController,
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  decoration: const InputDecoration(
+                    labelText: 'Price (₱)',
+                    border: OutlineInputBorder(),
+                    prefixText: '₱ ',
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -169,9 +186,14 @@ class _AdminProductsState extends State<AdminProducts> {
                   return;
                 }
 
+                // KINUHA NA NATIN YUNG PRICE AT GINAWANG NUMBER
+                final double parsedPrice =
+                    double.tryParse(priceController.text) ?? 0.0;
+
                 final data = {
                   'sku': skuController.text,
                   'name': nameController.text,
+                  'price': parsedPrice, // ISINAMA NA ANG PRICE SA DATABASE
                   'category': selectedCategory,
                   'stock_status': selectedStatus,
                   'image_url': imageController.text,
@@ -252,7 +274,7 @@ class _AdminProductsState extends State<AdminProducts> {
                   ),
                   SizedBox(height: 4),
                   Text(
-                    'Manage technical equipment catalog and stock levels.',
+                    'Manage technical equipment catalog, pricing, and stock levels.',
                     style: TextStyle(fontSize: 14, color: Colors.grey),
                   ),
                 ],
@@ -299,12 +321,11 @@ class _AdminProductsState extends State<AdminProducts> {
             ],
           ),
           const SizedBox(height: 16),
-          // BINALOT ANG HEADER AT LIST SA ISANG HORIZONTAL SCROLLVIEW
           Expanded(
             child: SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: SizedBox(
-                width: 800, // MINIMUM WIDTH PARA HINDI MA-SQUEEZE
+                width: 850, // INI-ADJUST NATIN ANG WIDTH PARA KASYA ANG PRICE
                 child: Column(
                   children: [
                     // TABLE HEADER
@@ -335,7 +356,8 @@ class _AdminProductsState extends State<AdminProducts> {
                             ),
                           ),
                           Expanded(
-                            flex: 3,
+                            flex:
+                                2, // BINAGONG FLEX PARA KASYA ANG PRICE SA TABI
                             child: Text(
                               'PRODUCT NAME',
                               style: TextStyle(
@@ -349,6 +371,18 @@ class _AdminProductsState extends State<AdminProducts> {
                             flex: 2,
                             child: Text(
                               'CATEGORY',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 10,
+                                color: Colors.grey,
+                              ),
+                            ),
+                          ),
+                          // BAGONG HEADER PARA SA PRICE
+                          Expanded(
+                            flex: 1,
+                            child: Text(
+                              'PRICE',
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 10,
@@ -403,6 +437,13 @@ class _AdminProductsState extends State<AdminProducts> {
                                 final product = _filteredProducts[index];
                                 final status =
                                     product['stock_status'] ?? 'IN STOCK';
+                                // KUNIN ANG PRICE PARA IDISPLAY
+                                final double price =
+                                    double.tryParse(
+                                      product['price']?.toString() ?? '0',
+                                    ) ??
+                                    0.0;
+
                                 Color statusColor = Colors.green;
                                 if (status == 'LOW STOCK') {
                                   statusColor = Colors.orange;
@@ -436,7 +477,7 @@ class _AdminProductsState extends State<AdminProducts> {
                                         ),
                                       ),
                                       Expanded(
-                                        flex: 3,
+                                        flex: 2,
                                         child: Row(
                                           children: [
                                             if (product['image_url'] != null &&
@@ -484,6 +525,18 @@ class _AdminProductsState extends State<AdminProducts> {
                                           style: const TextStyle(
                                             fontSize: 13,
                                             color: Color(0xFF666666),
+                                          ),
+                                        ),
+                                      ),
+                                      // BAGONG COLUMN PARA SA PRICE
+                                      Expanded(
+                                        flex: 1,
+                                        child: Text(
+                                          '₱ ${price.toStringAsFixed(2)}',
+                                          style: const TextStyle(
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.bold,
+                                            color: Color(0xFFB71C1C),
                                           ),
                                         ),
                                       ),

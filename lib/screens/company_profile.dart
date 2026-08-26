@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 
 class CompanyProfile extends StatelessWidget {
-  final VoidCallback
-  onRequestQuote; // Tatanggapin natin ang command mula sa main layout
+  final VoidCallback onRequestQuote;
 
   const CompanyProfile({super.key, required this.onRequestQuote});
 
@@ -16,7 +15,8 @@ class CompanyProfile extends StatelessWidget {
           _buildOriginSection(),
           _buildMissionVision(),
           _buildCoreValues(),
-          _buildFooter(),
+          _buildCTASection(), // Hiwalay na Call-To-Action section
+          _buildFooter(), // Updated Uniform Dark Footer
         ],
       ),
     );
@@ -272,84 +272,115 @@ class CompanyProfile extends StatelessWidget {
     );
   }
 
-  Widget _buildFooter() {
+  // BAGONG SECTION PARA SA CALL-TO-ACTION (REQUEST QUOTE)
+  Widget _buildCTASection() {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
       color: const Color(0xFFF5F5F5),
       child: Column(
         children: [
           const Text(
-            'Katala Fire Protection',
+            'Ready to secure your facility?',
             style: TextStyle(
-              fontWeight: FontWeight.w900,
-              color: Color(0xFFB71C1C),
-              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              fontSize: 18,
+              color: Color(0xFF1A1A1A),
             ),
           ),
           const SizedBox(height: 8),
           const Text(
-            'Safeguarding Lives and Assets',
-            style: TextStyle(fontSize: 10, color: Color(0xFF666666)),
+            'Consult with our safety engineers today.',
+            style: TextStyle(fontSize: 12, color: Color(0xFF666666)),
           ),
           const SizedBox(height: 24),
           SizedBox(
             width: double.infinity,
-            child: OutlinedButton(
-              onPressed: onRequestQuote, // DITO NATIN NILAGAY YUNG FUNCTION!
-              style: OutlinedButton.styleFrom(
-                side: const BorderSide(color: Color(0xFFB71C1C)),
+            child: ElevatedButton.icon(
+              onPressed: onRequestQuote,
+              icon: const Icon(
+                Icons.engineering_outlined,
+                color: Colors.white,
+                size: 18,
+              ),
+              label: const Text(
+                'REQUEST SERVICE PROJECT',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFB71C1C),
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),
               ),
-              child: const Text(
-                'REQUEST SERVICE',
-                style: TextStyle(
-                  color: Color(0xFFB71C1C),
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  // IN-UPDATE NA UNIFORM DARK FOOTER AT TINANGGAL ANG 'ISO CERTIFICATION'
+  Widget _buildFooter() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 24),
+      color: const Color(0xFF1A1A1A),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          const Icon(Icons.shield, color: Color(0xFFB71C1C), size: 36),
           const SizedBox(height: 16),
           const Text(
-            '© 2024 Katala Fire Protection Product Trading. All rights reserved.',
-            style: TextStyle(fontSize: 10, color: Color(0xFF999999)),
-            textAlign: TextAlign.center,
+            'Katala Fire Protection',
+            style: TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+              fontSize: 18,
+            ),
           ),
+          const SizedBox(height: 4),
+          const Text(
+            'Safeguarding Lives and Assets',
+            style: TextStyle(
+              color: Colors.grey,
+              fontSize: 12,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+          const SizedBox(height: 32),
+          const Divider(color: Color(0xFF333333)),
           const SizedBox(height: 16),
+          const Text(
+            '© 2026 Katala Fire Protection Product Trading.\nAll rights reserved.',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: Colors.grey, fontSize: 10, height: 1.5),
+          ),
+          const SizedBox(height: 24),
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            mainAxisAlignment: MainAxisAlignment.center,
             children: const [
               Text(
                 'Privacy Policy',
-                style: TextStyle(fontSize: 9, color: Color(0xFF666666)),
+                style: TextStyle(fontSize: 10, color: Colors.grey),
               ),
-              Text(
-                '•',
-                style: TextStyle(fontSize: 9, color: Color(0xFF666666)),
-              ),
+              SizedBox(width: 8),
+              Text('•', style: TextStyle(fontSize: 10, color: Colors.grey)),
+              SizedBox(width: 8),
               Text(
                 'Terms of Service',
-                style: TextStyle(fontSize: 9, color: Color(0xFF666666)),
+                style: TextStyle(fontSize: 10, color: Colors.grey),
               ),
+              SizedBox(width: 8),
+              Text('•', style: TextStyle(fontSize: 10, color: Colors.grey)),
+              SizedBox(width: 8),
               Text(
-                '•',
-                style: TextStyle(fontSize: 9, color: Color(0xFF666666)),
-              ),
-              Text(
-                'ISO Certification',
-                style: TextStyle(fontSize: 9, color: Color(0xFF666666)),
-              ),
-              Text(
-                '•',
-                style: TextStyle(fontSize: 9, color: Color(0xFF666666)),
-              ),
-              Text(
-                'Business Registration',
-                style: TextStyle(fontSize: 9, color: Color(0xFF666666)),
+                'SEC & DTI Registered',
+                style: TextStyle(fontSize: 10, color: Colors.grey),
               ),
             ],
           ),

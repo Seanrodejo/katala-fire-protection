@@ -44,25 +44,26 @@ class Homepage extends StatelessWidget {
                 ),
                 const SizedBox(height: 24),
 
-                // Buttons
+                // HIGHLIGHTED PRIMARY ACTIONS (Separated Workflows)
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton.icon(
                     onPressed: onRequestQuote,
                     icon: const Icon(
-                      Icons.arrow_forward,
+                      Icons.engineering_outlined,
                       color: Colors.white,
-                      size: 16,
+                      size: 20,
                     ),
                     label: const Text(
-                      'Request a Quote',
+                      'Request a Service Project',
                       style: TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
+                        fontSize: 15,
                       ),
                     ),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFB71C1C),
+                      backgroundColor: const Color(0xFFB71C1C), // Katala Red
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
@@ -73,20 +74,28 @@ class Homepage extends StatelessWidget {
                 const SizedBox(height: 12),
                 SizedBox(
                   width: double.infinity,
-                  child: OutlinedButton(
-                    onPressed: onExploreServices,
-                    style: OutlinedButton.styleFrom(
-                      side: const BorderSide(color: Color(0xFFB71C1C)),
+                  child: ElevatedButton.icon(
+                    onPressed: onViewCatalog,
+                    icon: const Icon(
+                      Icons.shopping_cart_outlined,
+                      color: Colors.white,
+                      size: 20,
+                    ),
+                    label: const Text(
+                      'Order Products',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 15,
+                      ),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(
+                        0xFF2C3E50,
+                      ), // Dark Blue for separation
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                    child: const Text(
-                      'Explore Services',
-                      style: TextStyle(
-                        color: Color(0xFFB71C1C),
-                        fontWeight: FontWeight.bold,
                       ),
                     ),
                   ),
@@ -155,19 +164,19 @@ class Homepage extends StatelessWidget {
                 ),
                 const SizedBox(height: 32),
 
-                // Trust Badges
+                // Trust Badges (REVISED TO REMOVE UNVERIFIED CLAIMS)
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     _buildTrustBadge(Icons.verified_outlined, 'SEC Registered'),
                     _buildTrustBadge(
-                      Icons.engineering_outlined,
-                      'PCAB Licensed',
+                      Icons.domain_verification_outlined,
+                      'DTI Registered',
                     ),
-                    _buildTrustBadge(Icons.shield_outlined, 'BFP Standard'),
+                    _buildTrustBadge(Icons.shield_outlined, 'BFP Compliant'),
                     _buildTrustBadge(
-                      Icons.support_agent_outlined,
-                      '24/7 Support',
+                      Icons.thumb_up_outlined,
+                      'Quality Assured',
                     ),
                   ],
                 ),
@@ -221,7 +230,7 @@ class Homepage extends StatelessWidget {
             ),
           ),
 
-          // BAGONG FOOTER
+          // FOOTER
           _buildFooter(),
         ],
       ),
@@ -319,12 +328,11 @@ class Homepage extends StatelessWidget {
     );
   }
 
-  // ETO YUNG DESIGN NG FOOTER
   Widget _buildFooter() {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 24),
-      color: const Color(0xFF1A1A1A), // Dark elegant background
+      color: const Color(0xFF1A1A1A),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [

@@ -13,11 +13,25 @@ class _AdminRequestsState extends State<AdminRequests> {
   List<Map<String, dynamic>> _requests = [];
   bool _isLoading = true;
   int _selectedTab = 0;
+
+  // BAGONG TABS PARA SA STRUCTURED WORKFLOW
   final List<String> _tabs = [
-    'All Requests',
-    'Pending',
-    'Under Review',
-    'Quoted',
+    'All Projects',
+    'Inquiry / Requirements',
+    'Design & Engineering',
+    'Quotation & Approvals',
+    'Installation Progress',
+    'Completion & Warranty',
+  ];
+
+  // BUONG PROJECT LIFECYCLE STATUSES
+  final List<String> _projectStatuses = [
+    'Inquiry / Requirements',
+    'Design & Engineering',
+    'Quotation & Approvals',
+    'Payment Arrangement',
+    'Installation Progress',
+    'Completion & Warranty',
     'Cancelled',
   ];
 
@@ -49,7 +63,17 @@ class _AdminRequestsState extends State<AdminRequests> {
   }
 
   void _showRespondDialog(Map<String, dynamic> request) {
-    String newStatus = request['status'] ?? 'Pending';
+    String rawStatus = request['status'] ?? 'Inquiry / Requirements';
+
+    // MAPPING PARA SA MGA LUMANG DATA NA 'PENDING' O 'UNDER REVIEW'
+    if (rawStatus == 'Pending') rawStatus = 'Inquiry / Requirements';
+    if (rawStatus == 'Under Review') rawStatus = 'Design & Engineering';
+    if (rawStatus == 'Quoted') rawStatus = 'Quotation & Approvals';
+
+    String newStatus = _projectStatuses.contains(rawStatus)
+        ? rawStatus
+        : 'Inquiry / Requirements';
+
     final responseController = TextEditingController(
       text: request['admin_response'] ?? '',
     );
@@ -64,7 +88,7 @@ class _AdminRequestsState extends State<AdminRequests> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              'Request ${request['reference_no']}',
+              'Project ${request['reference_no']}',
               style: const TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
@@ -107,12 +131,12 @@ class _AdminRequestsState extends State<AdminRequests> {
           mainAxisSize: MainAxisSize.min,
           children: [
             const Text(
-              'Admin Actions',
+              'Project Tracker Workflow',
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
             const Text(
-              'Update Status:',
+              'Current Stage:',
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 12,
@@ -121,29 +145,18 @@ class _AdminRequestsState extends State<AdminRequests> {
             ),
             const SizedBox(height: 4),
             DropdownButtonFormField<String>(
-              value:
-                  [
-                    'Pending',
-                    'Under Review',
-                    'Quoted',
-                    'Cancelled',
-                  ].contains(newStatus)
-                  ? newStatus
-                  : 'Pending',
+              value: newStatus,
               decoration: const InputDecoration(border: OutlineInputBorder()),
-              items: [
-                'Pending',
-                'Under Review',
-                'Quoted',
-                'Cancelled',
-              ].map((s) => DropdownMenuItem(value: s, child: Text(s))).toList(),
+              items: _projectStatuses
+                  .map((s) => DropdownMenuItem(value: s, child: Text(s)))
+                  .toList(),
               onChanged: (val) {
                 if (val != null) newStatus = val;
               },
             ),
             const SizedBox(height: 16),
             const Text(
-              'Admin Response / Quotation Link:',
+              'Official Remarks / Document Links (Quotation, Design, Billing):',
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 12,
@@ -156,7 +169,7 @@ class _AdminRequestsState extends State<AdminRequests> {
               maxLines: 6,
               decoration: const InputDecoration(
                 hintText:
-                    'Type your official response, remarks, or paste the link to the quotation document here...',
+                    'Paste links to approved designs, quotation docs, or billing invoices here...',
                 border: OutlineInputBorder(),
               ),
             ),
@@ -188,7 +201,7 @@ class _AdminRequestsState extends State<AdminRequests> {
                         _fetchRequests();
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
-                            content: Text('Response and Status Updated!'),
+                            content: Text('Project Stage & Documents Updated!'),
                             backgroundColor: Colors.green,
                           ),
                         );
@@ -212,7 +225,7 @@ class _AdminRequestsState extends State<AdminRequests> {
                     ),
                   ),
                   child: const Text(
-                    'Save & Update',
+                    'Update Project',
                     style: TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.bold,
@@ -297,18 +310,33 @@ class _AdminRequestsState extends State<AdminRequests> {
     List<Map<String, dynamic>> filteredRequests = _requests;
     if (_selectedTab != 0) {
       String filterStatus = _tabs[_selectedTab];
-      filteredRequests = _requests
-          .where((req) => req['status'] == filterStatus)
-          .toList();
+      filteredRequests = _requests.where((req) {
+        String status = req['status'] ?? 'Inquiry / Requirements';
+        // MAP LEGACY STATUSES FOR FILTERING
+        if (status == 'Pending') status = 'Inquiry / Requirements';
+        if (status == 'Under Review') status = 'Design & Engineering';
+        if (status == 'Quoted') status = 'Quotation & Approvals';
+        return status == filterStatus;
+      }).toList();
     }
 
-    int pendingCount = _requests.where((r) => r['status'] == 'Pending').length;
-    int reviewCount = _requests
-        .where((r) => r['status'] == 'Under Review')
+    int inquiryCount = _requests
+        .where(
+          (r) =>
+              r['status'] == 'Pending' ||
+              r['status'] == 'Inquiry / Requirements',
+        )
         .length;
-    int quotedCount = _requests.where((r) => r['status'] == 'Quoted').length;
+    int quoteCount = _requests
+        .where(
+          (r) =>
+              r['status'] == 'Quoted' || r['status'] == 'Quotation & Approvals',
+        )
+        .length;
+    int installationCount = _requests
+        .where((r) => r['status'] == 'Installation Progress')
+        .length;
 
-    // FIX: BINALOT NATIN ANG BUONG PAGE SA SingleChildScrollView
     return SingleChildScrollView(
       child: Container(
         margin: EdgeInsets.all(isDesktop ? 24.0 : 16.0),
@@ -330,7 +358,7 @@ class _AdminRequestsState extends State<AdminRequests> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: const [
                     Text(
-                      'Quotation Requests',
+                      'Service Project Tracker',
                       style: TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
@@ -339,7 +367,7 @@ class _AdminRequestsState extends State<AdminRequests> {
                     ),
                     SizedBox(height: 4),
                     Text(
-                      'Manage detailed client requests and provide engineering quotations.',
+                      'Track service inquiries from requirements, design, quotation, to installation and warranty.',
                       style: TextStyle(fontSize: 14, color: Colors.grey),
                     ),
                   ],
@@ -368,7 +396,7 @@ class _AdminRequestsState extends State<AdminRequests> {
                     children: [
                       Expanded(
                         child: _buildStatCard(
-                          'TOTAL REQUESTS',
+                          'TOTAL PROJECTS',
                           _requests.length.toString(),
                           Colors.black,
                         ),
@@ -376,25 +404,25 @@ class _AdminRequestsState extends State<AdminRequests> {
                       const SizedBox(width: 16),
                       Expanded(
                         child: _buildStatCard(
-                          'PENDING',
-                          pendingCount.toString(),
+                          'INQUIRIES',
+                          inquiryCount.toString(),
                           Colors.orange,
                         ),
                       ),
                       const SizedBox(width: 16),
                       Expanded(
                         child: _buildStatCard(
-                          'UNDER REVIEW',
-                          reviewCount.toString(),
-                          Colors.blue,
+                          'QUOTATIONS',
+                          quoteCount.toString(),
+                          Colors.deepPurple,
                         ),
                       ),
                       const SizedBox(width: 16),
                       Expanded(
                         child: _buildStatCard(
-                          'QUOTED',
-                          quotedCount.toString(),
-                          Colors.green,
+                          'INSTALLATIONS',
+                          installationCount.toString(),
+                          Colors.indigo,
                         ),
                       ),
                     ],
@@ -402,27 +430,27 @@ class _AdminRequestsState extends State<AdminRequests> {
                 : Column(
                     children: [
                       _buildStatCard(
-                        'TOTAL REQUESTS',
+                        'TOTAL PROJECTS',
                         _requests.length.toString(),
                         Colors.black,
                       ),
                       const SizedBox(height: 12),
                       _buildStatCard(
-                        'PENDING',
-                        pendingCount.toString(),
+                        'INQUIRIES',
+                        inquiryCount.toString(),
                         Colors.orange,
                       ),
                       const SizedBox(height: 12),
                       _buildStatCard(
-                        'UNDER REVIEW',
-                        reviewCount.toString(),
-                        Colors.blue,
+                        'QUOTATIONS',
+                        quoteCount.toString(),
+                        Colors.deepPurple,
                       ),
                       const SizedBox(height: 12),
                       _buildStatCard(
-                        'QUOTED',
-                        quotedCount.toString(),
-                        Colors.green,
+                        'INSTALLATIONS',
+                        installationCount.toString(),
+                        Colors.indigo,
                       ),
                     ],
                   ),
@@ -434,7 +462,6 @@ class _AdminRequestsState extends State<AdminRequests> {
             ),
             const SizedBox(height: 16),
 
-            // FIX: TINANGGAL NA YUNG "Expanded" DITO KASI NAKA-SCROLL NA YUNG BUONG PAGE
             _buildTable(filteredRequests),
           ],
         ),
@@ -513,7 +540,7 @@ class _AdminRequestsState extends State<AdminRequests> {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: SizedBox(
-        width: 900,
+        width: 1000, // ADJUSTED WIDTH PARA MAGKASYA ANG MAHABANG STATUS
         child: Column(
           children: [
             Container(
@@ -528,7 +555,7 @@ class _AdminRequestsState extends State<AdminRequests> {
                   Expanded(
                     flex: 2,
                     child: Text(
-                      'REFERENCE NO.',
+                      'PROJECT REF.',
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 10,
@@ -539,7 +566,7 @@ class _AdminRequestsState extends State<AdminRequests> {
                   Expanded(
                     flex: 3,
                     child: Text(
-                      'CUSTOMER NAME',
+                      'CLIENT NAME',
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 10,
@@ -550,7 +577,7 @@ class _AdminRequestsState extends State<AdminRequests> {
                   Expanded(
                     flex: 3,
                     child: Text(
-                      'REQUEST TYPE',
+                      'PROJECT TYPE',
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 10,
@@ -561,7 +588,7 @@ class _AdminRequestsState extends State<AdminRequests> {
                   Expanded(
                     flex: 2,
                     child: Text(
-                      'DATE',
+                      'DATE LOGGED',
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 10,
@@ -570,9 +597,9 @@ class _AdminRequestsState extends State<AdminRequests> {
                     ),
                   ),
                   Expanded(
-                    flex: 2,
+                    flex: 3, // BINIGYAN NG MAS MALAKING ESPASYO ANG STATUS
                     child: Text(
-                      'STATUS',
+                      'CURRENT STAGE',
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 10,
@@ -596,7 +623,6 @@ class _AdminRequestsState extends State<AdminRequests> {
               ),
             ),
 
-            // FIX: TINANGGAL ANG EXPANDED AT NILAGYAN NG SHRINKWRAP PARA SUMABAY SA SCROLL NG PAGE
             _isLoading
                 ? const Padding(
                     padding: EdgeInsets.all(32.0),
@@ -611,22 +637,40 @@ class _AdminRequestsState extends State<AdminRequests> {
                     padding: EdgeInsets.all(32.0),
                     child: Center(
                       child: Text(
-                        'No requests found.',
+                        'No service projects found in this stage.',
                         style: TextStyle(color: Colors.grey),
                       ),
                     ),
                   )
                 : ListView.builder(
-                    shrinkWrap: true, // IMPORTANT FIX
-                    physics:
-                        const NeverScrollableScrollPhysics(), // IMPORTANT FIX
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
                     itemCount: requests.length,
                     itemBuilder: (context, index) {
                       final req = requests[index];
-                      final status = req['status'] ?? 'Pending';
-                      Color statusColor = Colors.orange;
-                      if (status == 'Under Review') statusColor = Colors.blue;
-                      if (status == 'Quoted') statusColor = Colors.green;
+
+                      // FIX LEGACY STATUSES FOR DISPLAY
+                      String status = req['status'] ?? 'Inquiry / Requirements';
+                      if (status == 'Pending')
+                        status = 'Inquiry / Requirements';
+                      if (status == 'Under Review')
+                        status = 'Design & Engineering';
+                      if (status == 'Quoted') status = 'Quotation & Approvals';
+
+                      // ASSIGN COLORS BASE SA PROJECT STAGE
+                      Color statusColor = Colors.grey;
+                      if (status == 'Inquiry / Requirements')
+                        statusColor = Colors.orange;
+                      if (status == 'Design & Engineering')
+                        statusColor = Colors.blue;
+                      if (status == 'Quotation & Approvals')
+                        statusColor = Colors.deepPurple;
+                      if (status == 'Payment Arrangement')
+                        statusColor = Colors.teal;
+                      if (status == 'Installation Progress')
+                        statusColor = Colors.indigo;
+                      if (status == 'Completion & Warranty')
+                        statusColor = Colors.green;
                       if (status == 'Cancelled') statusColor = Colors.red;
 
                       String rawDate = req['created_at'] ?? 'TBA';
@@ -702,7 +746,7 @@ class _AdminRequestsState extends State<AdminRequests> {
                               ),
                             ),
                             Expanded(
-                              flex: 2,
+                              flex: 3,
                               child: Row(
                                 children: [
                                   Container(
@@ -714,11 +758,15 @@ class _AdminRequestsState extends State<AdminRequests> {
                                     ),
                                   ),
                                   const SizedBox(width: 8),
-                                  Text(
-                                    status,
-                                    style: const TextStyle(
-                                      fontSize: 13,
-                                      color: Color(0xFF666666),
+                                  Expanded(
+                                    child: Text(
+                                      status,
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.bold,
+                                        color: statusColor,
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
                                     ),
                                   ),
                                 ],
@@ -729,7 +777,7 @@ class _AdminRequestsState extends State<AdminRequests> {
                               child: InkWell(
                                 onTap: () => _showRespondDialog(req),
                                 child: const Text(
-                                  'View & Respond',
+                                  'Update Tracker',
                                   style: TextStyle(
                                     fontSize: 12,
                                     color: Color(0xFFB71C1C),

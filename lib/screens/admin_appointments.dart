@@ -48,6 +48,129 @@ class _AdminAppointmentsState extends State<AdminAppointments> {
     }
   }
 
+  // BAGONG DIALOG PARA MAG-ADD NG APPOINTMENT NA NAKA-LINK SA PROJECT
+  void _showAddAppointmentDialog() {
+    final clientController = TextEditingController();
+    final projectRefController = TextEditingController();
+    final dateController = TextEditingController();
+    String selectedType = 'Site Consultation';
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          title: const Text(
+            'Schedule Site Visit',
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: projectRefController,
+                  decoration: const InputDecoration(
+                    labelText: 'Project Reference (e.g. REQ-1234)',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: clientController,
+                  decoration: const InputDecoration(
+                    labelText: 'Client Name',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                DropdownButtonFormField<String>(
+                  value: selectedType,
+                  decoration: const InputDecoration(
+                    labelText: 'Visit Type',
+                    border: OutlineInputBorder(),
+                  ),
+                  items:
+                      [
+                            'Site Consultation',
+                            'Installation Visit',
+                            'Inspection',
+                            'Maintenance',
+                          ]
+                          .map(
+                            (val) =>
+                                DropdownMenuItem(value: val, child: Text(val)),
+                          )
+                          .toList(),
+                  onChanged: (value) {
+                    if (value != null) selectedType = value;
+                  },
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: dateController,
+                  decoration: const InputDecoration(
+                    labelText: 'Date & Time (e.g. 2026-08-30 10:00 AM)',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                if (projectRefController.text.isEmpty ||
+                    clientController.text.isEmpty)
+                  return;
+
+                try {
+                  await _supabase.from('appointments').insert({
+                    'project_ref': projectRefController.text,
+                    'client_name': clientController.text,
+                    'appt_type': selectedType,
+                    'appointment_date': dateController.text,
+                    'status': 'Pending',
+                  });
+                  if (mounted) {
+                    Navigator.pop(context);
+                    _fetchAppointments();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Appointment Scheduled!'),
+                        backgroundColor: Colors.green,
+                      ),
+                    );
+                  }
+                } catch (e) {
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Error: $e'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFB71C1C),
+              ),
+              child: const Text('Save', style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   void _showUpdateStatusDialog(String id, String currentStatus) {
     String newStatus = currentStatus;
     showDialog(
@@ -128,7 +251,6 @@ class _AdminAppointmentsState extends State<AdminAppointments> {
 
   @override
   Widget build(BuildContext context) {
-    // RESPONSIVENESS LOGIC
     final isDesktop = MediaQuery.of(context).size.width > 800;
 
     List<Map<String, dynamic>> filteredAppointments = _appointments;
@@ -149,7 +271,6 @@ class _AdminAppointmentsState extends State<AdminAppointments> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // GINAWANG WRAP ANG HEADER PARA HINDI MA-CUT ANG BUTTON
           Wrap(
             alignment: WrapAlignment.spaceBetween,
             crossAxisAlignment: WrapCrossAlignment.center,
@@ -160,7 +281,7 @@ class _AdminAppointmentsState extends State<AdminAppointments> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: const [
                   Text(
-                    'Appointments',
+                    'Project Site Visits',
                     style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
@@ -169,36 +290,75 @@ class _AdminAppointmentsState extends State<AdminAppointments> {
                   ),
                   SizedBox(height: 4),
                   Text(
-                    'Manage engineering consultations and site inspections.',
+                    'Manage site consultations tied to specific service inquiries.',
                     style: TextStyle(fontSize: 14, color: Colors.grey),
                   ),
                 ],
               ),
-              OutlinedButton.icon(
-                onPressed: _fetchAppointments,
-                icon: const Icon(
-                  Icons.refresh,
-                  color: Color(0xFFB71C1C),
-                  size: 18,
-                ),
-                label: const Text(
-                  'Refresh',
-                  style: TextStyle(color: Color(0xFFB71C1C)),
-                ),
-                style: OutlinedButton.styleFrom(
-                  side: const BorderSide(color: Color(0xFFB71C1C)),
-                ),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  OutlinedButton.icon(
+                    onPressed: _fetchAppointments,
+                    icon: const Icon(
+                      Icons.refresh,
+                      color: Color(0xFFB71C1C),
+                      size: 18,
+                    ),
+                    label: const Text(
+                      'Refresh',
+                      style: TextStyle(color: Color(0xFFB71C1C)),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      side: const BorderSide(color: Color(0xFFB71C1C)),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  ElevatedButton.icon(
+                    onPressed: _showAddAppointmentDialog,
+                    icon: const Icon(Icons.add, color: Colors.white, size: 18),
+                    label: const Text(
+                      'Schedule Visit',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFB71C1C),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
-          const SizedBox(height: 32),
-          // HORIZONTAL SCROLL PARA SA TABS SA MOBILE
+
+          // TEAM SUGGESTION BANNER
+          const SizedBox(height: 24),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: const Color(0xFFFFF4E5),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.orange.withOpacity(0.3)),
+            ),
+            child: Row(
+              children: const [
+                Icon(Icons.lightbulb_outline, color: Colors.orange, size: 20),
+                SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'TEAM SUGGESTION: Calendar scheduling rules (e.g., auto-assigning engineers, time blocking) are pending client confirmation. Currently, site visits are manually tied to Project References.',
+                    style: TextStyle(fontSize: 12, color: Color(0xFF805B10)),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 24),
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: _buildTabs(),
           ),
           const SizedBox(height: 16),
-          // RESPONSIVE TABLE
           Expanded(child: _buildTable(filteredAppointments)),
         ],
       ),
@@ -239,11 +399,10 @@ class _AdminAppointmentsState extends State<AdminAppointments> {
   }
 
   Widget _buildTable(List<Map<String, dynamic>> appointments) {
-    // BINALOT ANG TABLE SA HORIZONTAL SCROLLVIEW
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: SizedBox(
-        width: 700, // MINIMUM WIDTH PARA HINDI MAG-SQUEEZE
+        width: 900, // In-expand natin width para magkasya ang bagong columns
         child: Column(
           children: [
             Container(
@@ -256,7 +415,18 @@ class _AdminAppointmentsState extends State<AdminAppointments> {
               child: Row(
                 children: const [
                   Expanded(
-                    flex: 3,
+                    flex: 2,
+                    child: Text(
+                      'PROJECT REF',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 10,
+                        color: Colors.grey,
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    flex: 2,
                     child: Text(
                       'CLIENT NAME',
                       style: TextStyle(
@@ -267,9 +437,20 @@ class _AdminAppointmentsState extends State<AdminAppointments> {
                     ),
                   ),
                   Expanded(
-                    flex: 3,
+                    flex: 2,
                     child: Text(
-                      'APPOINTMENT DATE',
+                      'TYPE',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 10,
+                        color: Colors.grey,
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    flex: 2,
+                    child: Text(
+                      'DATE',
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 10,
@@ -334,7 +515,9 @@ class _AdminAppointmentsState extends State<AdminAppointments> {
 
                         return _buildTableRow(
                           appt['id'].toString(),
+                          appt['project_ref'] ?? 'Unlinked',
                           appt['client_name'] ?? 'Unknown',
+                          appt['appt_type'] ?? 'Consultation',
                           formattedDate,
                           status,
                           statusColor,
@@ -350,7 +533,9 @@ class _AdminAppointmentsState extends State<AdminAppointments> {
 
   Widget _buildTableRow(
     String id,
+    String projectRef,
     String name,
+    String type,
     String date,
     String status,
     Color dotColor,
@@ -363,7 +548,18 @@ class _AdminAppointmentsState extends State<AdminAppointments> {
       child: Row(
         children: [
           Expanded(
-            flex: 3,
+            flex: 2,
+            child: Text(
+              projectRef,
+              style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFFB71C1C),
+              ),
+            ),
+          ),
+          Expanded(
+            flex: 2,
             child: Text(
               name,
               style: const TextStyle(
@@ -374,7 +570,14 @@ class _AdminAppointmentsState extends State<AdminAppointments> {
             ),
           ),
           Expanded(
-            flex: 3,
+            flex: 2,
+            child: Text(
+              type,
+              style: const TextStyle(fontSize: 12, color: Color(0xFF666666)),
+            ),
+          ),
+          Expanded(
+            flex: 2,
             child: Text(
               date,
               style: const TextStyle(fontSize: 13, color: Color(0xFF666666)),
