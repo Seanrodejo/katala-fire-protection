@@ -258,12 +258,12 @@ class _AdminDashboardState extends State<AdminDashboard> {
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
           color: isHighlight
-              ? const Color(0xFFB71C1C).withOpacity(0.3)
+              ? const Color(0xFFB71C1C).withValues(alpha: 0.3)
               : const Color(0xFFE0E0E0),
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.02),
+            color: Colors.black.withValues(alpha: 0.02),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -285,7 +285,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                   ),
                 ),
               ),
-              Icon(icon, size: 16, color: Colors.grey.withOpacity(0.5)),
+              Icon(icon, size: 16, color: Colors.grey.withValues(alpha: 0.5)),
             ],
           ),
           const SizedBox(height: 12),

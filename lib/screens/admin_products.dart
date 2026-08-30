@@ -133,7 +133,7 @@ class _AdminProductsState extends State<AdminProducts> {
                 ),
                 const SizedBox(height: 16),
                 DropdownButtonFormField<String>(
-                  value: selectedCategory,
+                  initialValue: selectedCategory,
                   decoration: const InputDecoration(
                     labelText: 'Category',
                     border: OutlineInputBorder(),
@@ -150,7 +150,7 @@ class _AdminProductsState extends State<AdminProducts> {
                 ),
                 const SizedBox(height: 16),
                 DropdownButtonFormField<String>(
-                  value: selectedStatus,
+                  initialValue: selectedStatus,
                   decoration: const InputDecoration(
                     labelText: 'Stock Status',
                     border: OutlineInputBorder(),
@@ -550,8 +550,8 @@ class _AdminProductsState extends State<AdminProducts> {
                                               vertical: 4,
                                             ),
                                             decoration: BoxDecoration(
-                                              color: statusColor.withOpacity(
-                                                0.1,
+                                              color: statusColor.withValues(
+                                                alpha: 0.1,
                                               ),
                                               borderRadius:
                                                   BorderRadius.circular(4),

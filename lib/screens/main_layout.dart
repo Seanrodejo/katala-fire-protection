@@ -104,7 +104,7 @@ class _MainLayoutState extends State<MainLayout> {
                   const SizedBox(height: 16),
 
                   DropdownButtonFormField<String>(
-                    value: selectedService,
+                    initialValue: selectedService,
                     decoration: const InputDecoration(
                       labelText: 'Primary Service Needed',
                       border: OutlineInputBorder(),

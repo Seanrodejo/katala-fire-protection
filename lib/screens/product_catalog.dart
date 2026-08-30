@@ -42,7 +42,6 @@ class _ProductCatalogState extends State<ProductCatalog> {
 
     final String sku = product['sku'] ?? 'N/A';
     final String name = product['name'] ?? 'Unknown Product';
-    final String category = product['category'] ?? 'General';
     final String status = product['stock_status'] ?? 'UNKNOWN';
     final String imageUrl =
         (product['image_url'] != null &&
@@ -183,7 +182,7 @@ class _ProductCatalogState extends State<ProductCatalog> {
                       ),
                       const SizedBox(height: 8),
                       DropdownButtonFormField<String>(
-                        value: fulfillmentMethod,
+                        initialValue: fulfillmentMethod,
                         decoration: const InputDecoration(
                           border: OutlineInputBorder(),
                           contentPadding: EdgeInsets.symmetric(
@@ -198,8 +197,9 @@ class _ProductCatalogState extends State<ProductCatalog> {
                           );
                         }).toList(),
                         onChanged: (val) {
-                          if (val != null)
+                          if (val != null) {
                             setDialogState(() => fulfillmentMethod = val);
+                          }
                         },
                       ),
 
@@ -290,7 +290,17 @@ class _ProductCatalogState extends State<ProductCatalog> {
                         children: [
                           IconButton(
                             icon: const Icon(Icons.arrow_back),
-                            onPressed: () => Navigator.pop(context),
+                            onPressed: () {
+                              // Return to the customer app shell, not the
+                              // authentication screen. Doing this in one
+                              // navigation call also avoids using the dialog's
+                              // disposed context after it is closed.
+                              Navigator.of(context, rootNavigator: true)
+                                  .pushNamedAndRemoveUntil(
+                                    '/main',
+                                    (route) => false,
+                                  );
+                            },
                           ),
                           const Expanded(
                             child: Text(
@@ -412,7 +422,7 @@ class _ProductCatalogState extends State<ProductCatalog> {
                             ),
                             const SizedBox(height: 8),
                             DropdownButtonFormField<String>(
-                              value: paymentMethod,
+                              initialValue: paymentMethod,
                               decoration: const InputDecoration(
                                 border: OutlineInputBorder(),
                               ),
@@ -426,8 +436,9 @@ class _ProductCatalogState extends State<ProductCatalog> {
                                       )
                                       .toList(),
                               onChanged: (val) {
-                                if (val != null)
+                                if (val != null) {
                                   setCheckoutState(() => paymentMethod = val);
+                                }
                               },
                             ),
                           ],
@@ -442,7 +453,7 @@ class _ProductCatalogState extends State<ProductCatalog> {
                         color: Colors.white,
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.05),
+                            color: Colors.black.withValues(alpha: 0.05),
                             blurRadius: 10,
                             offset: const Offset(0, -5),
                           ),
@@ -767,7 +778,7 @@ class _ProductCatalogState extends State<ProductCatalog> {
                                     vertical: 2,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: statusColor.withOpacity(0.1),
+                                    color: statusColor.withValues(alpha: 0.1),
                                     borderRadius: BorderRadius.circular(4),
                                   ),
                                   child: Text(

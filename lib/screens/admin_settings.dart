@@ -420,7 +420,7 @@ class _AdminSettingsState extends State<AdminSettings> {
       trailing: Switch(
         value: currentValue,
         onChanged: onChanged, // NAGBABAGO NA ANG STATE
-        activeColor: const Color(0xFFB71C1C),
+        activeThumbColor: const Color(0xFFB71C1C),
       ),
     );
   }

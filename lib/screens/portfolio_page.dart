@@ -294,14 +294,15 @@ class _PortfolioPageState extends State<PortfolioPage> {
     return FutureBuilder<List<Map<String, dynamic>>>(
       future: _fetchProjects(),
       builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting)
+        if (snapshot.connectionState == ConnectionState.waiting) {
           return const Padding(
             padding: EdgeInsets.symmetric(vertical: 40.0),
             child: Center(
               child: CircularProgressIndicator(color: Color(0xFFB71C1C)),
             ),
           );
-        if (snapshot.hasError || !snapshot.hasData || snapshot.data!.isEmpty)
+        }
+        if (snapshot.hasError || !snapshot.hasData || snapshot.data!.isEmpty) {
           return const Padding(
             padding: EdgeInsets.symmetric(vertical: 40.0),
             child: Center(
@@ -311,13 +312,15 @@ class _PortfolioPageState extends State<PortfolioPage> {
               ),
             ),
           );
+        }
 
         var projects = snapshot.data!;
-        if (_selectedSector != 'All')
+        if (_selectedSector != 'All') {
           projects = projects
               .where((p) => p['category'] == _selectedSector)
               .toList();
-        if (projects.isEmpty)
+        }
+        if (projects.isEmpty) {
           return const Padding(
             padding: EdgeInsets.symmetric(vertical: 40.0),
             child: Center(
@@ -327,6 +330,7 @@ class _PortfolioPageState extends State<PortfolioPage> {
               ),
             ),
           );
+        }
 
         return Padding(
           padding: const EdgeInsets.all(16.0),
@@ -346,7 +350,7 @@ class _PortfolioPageState extends State<PortfolioPage> {
                   border: Border.all(color: const Color(0xFFE0E0E0)),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.02),
+                      color: Colors.black.withValues(alpha: 0.02),
                       blurRadius: 8,
                       offset: const Offset(0, 2),
                     ),

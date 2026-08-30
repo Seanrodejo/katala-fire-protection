@@ -88,7 +88,7 @@ class _AdminAppointmentsState extends State<AdminAppointments> {
                 ),
                 const SizedBox(height: 16),
                 DropdownButtonFormField<String>(
-                  value: selectedType,
+                  initialValue: selectedType,
                   decoration: const InputDecoration(
                     labelText: 'Visit Type',
                     border: OutlineInputBorder(),
@@ -128,8 +128,9 @@ class _AdminAppointmentsState extends State<AdminAppointments> {
             ElevatedButton(
               onPressed: () async {
                 if (projectRefController.text.isEmpty ||
-                    clientController.text.isEmpty)
+                    clientController.text.isEmpty) {
                   return;
+                }
 
                 try {
                   await _supabase.from('appointments').insert({
@@ -183,7 +184,7 @@ class _AdminAppointmentsState extends State<AdminAppointments> {
             style: TextStyle(fontWeight: FontWeight.bold),
           ),
           content: DropdownButtonFormField<String>(
-            value:
+            initialValue:
                 [
                   'Pending',
                   'Confirmed',
@@ -337,7 +338,7 @@ class _AdminAppointmentsState extends State<AdminAppointments> {
             decoration: BoxDecoration(
               color: const Color(0xFFFFF4E5),
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.orange.withOpacity(0.3)),
+              border: Border.all(color: Colors.orange.withValues(alpha: 0.3)),
             ),
             child: Row(
               children: const [

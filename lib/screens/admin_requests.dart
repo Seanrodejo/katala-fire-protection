@@ -145,7 +145,7 @@ class _AdminRequestsState extends State<AdminRequests> {
             ),
             const SizedBox(height: 4),
             DropdownButtonFormField<String>(
-              value: newStatus,
+              initialValue: newStatus,
               decoration: const InputDecoration(border: OutlineInputBorder()),
               items: _projectStatuses
                   .map((s) => DropdownMenuItem(value: s, child: Text(s)))
@@ -651,26 +651,34 @@ class _AdminRequestsState extends State<AdminRequests> {
 
                       // FIX LEGACY STATUSES FOR DISPLAY
                       String status = req['status'] ?? 'Inquiry / Requirements';
-                      if (status == 'Pending')
+                      if (status == 'Pending') {
                         status = 'Inquiry / Requirements';
-                      if (status == 'Under Review')
+                      }
+                      if (status == 'Under Review') {
                         status = 'Design & Engineering';
+                      }
                       if (status == 'Quoted') status = 'Quotation & Approvals';
 
                       // ASSIGN COLORS BASE SA PROJECT STAGE
                       Color statusColor = Colors.grey;
-                      if (status == 'Inquiry / Requirements')
+                      if (status == 'Inquiry / Requirements') {
                         statusColor = Colors.orange;
-                      if (status == 'Design & Engineering')
+                      }
+                      if (status == 'Design & Engineering') {
                         statusColor = Colors.blue;
-                      if (status == 'Quotation & Approvals')
+                      }
+                      if (status == 'Quotation & Approvals') {
                         statusColor = Colors.deepPurple;
-                      if (status == 'Payment Arrangement')
+                      }
+                      if (status == 'Payment Arrangement') {
                         statusColor = Colors.teal;
-                      if (status == 'Installation Progress')
+                      }
+                      if (status == 'Installation Progress') {
                         statusColor = Colors.indigo;
-                      if (status == 'Completion & Warranty')
+                      }
+                      if (status == 'Completion & Warranty') {
                         statusColor = Colors.green;
+                      }
                       if (status == 'Cancelled') statusColor = Colors.red;
 
                       String rawDate = req['created_at'] ?? 'TBA';

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ServicesPage extends StatefulWidget {
   final VoidCallback onStartInquiry; // DINAGDAG NATIN ITO PARA MA-LINK SA FORM
@@ -11,23 +10,56 @@ class ServicesPage extends StatefulWidget {
 }
 
 class _ServicesPageState extends State<ServicesPage> {
-  final _supabase = Supabase.instance.client;
-  String _selectedTab = 'Installation';
-  final List<String> _tabs = [
-    'Installation',
-    'Inspection',
-    'Testing',
-    'Repair',
-    'Preventive Maintenance',
+  static const List<Map<String, dynamic>> _services = [
+    {
+      'title': 'Fire Extinguishers',
+      'description':
+          'Supply, selection, inspection, and servicing of portable fire extinguishers for your facility.',
+      'icon': Icons.fire_extinguisher,
+    },
+    {
+      'title': 'Fire Alarm & Detection Systems',
+      'description':
+          'Design, installation, testing, and maintenance of fire alarm and detection systems.',
+      'icon': Icons.sensors,
+    },
+    {
+      'title': 'Fire Sprinkler Systems',
+      'description':
+          'Sprinkler system design, installation, inspection, testing, and preventive maintenance.',
+      'icon': Icons.shower_outlined,
+    },
+    {
+      'title': 'Kitchen Suppression Systems',
+      'description':
+          'Fire suppression solutions for commercial kitchens, hoods, ducts, and cooking equipment.',
+      'icon': Icons.restaurant_outlined,
+    },
+    {
+      'title': 'Firefighting Equipment',
+      'description':
+          'Fire hoses, cabinets, hydrants, pumps, piping, and other firefighting equipment.',
+      'icon': Icons.settings_outlined,
+    },
+    {
+      'title': 'System Installation',
+      'description':
+          'Professional installation of fire-protection systems suited to your site requirements.',
+      'icon': Icons.construction_outlined,
+    },
+    {
+      'title': 'Maintenance & Inspection',
+      'description':
+          'Scheduled inspection, testing, repair, and preventive maintenance for existing systems.',
+      'icon': Icons.build_circle_outlined,
+    },
+    {
+      'title': 'Fire Safety Monitoring',
+      'description':
+          'Ongoing monitoring and support to help keep your fire-protection systems ready.',
+      'icon': Icons.visibility_outlined,
+    },
   ];
-
-  Future<List<Map<String, dynamic>>> _fetchServices() async {
-    final response = await _supabase
-        .from('services')
-        .select()
-        .order('created_at', ascending: false);
-    return List<Map<String, dynamic>>.from(response);
-  }
 
   void _showServiceDetails(
     BuildContext context,
@@ -122,7 +154,7 @@ class _ServicesPageState extends State<ServicesPage> {
                 ),
               ),
               child: const Text(
-                'Start Inquiry',
+                'Start service inquiry',
                 style: TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
@@ -142,7 +174,6 @@ class _ServicesPageState extends State<ServicesPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildHeaderSection(),
-          _buildTabs(),
           _buildServicesList(),
           _buildFooter(),
         ],
@@ -155,8 +186,8 @@ class _ServicesPageState extends State<ServicesPage> {
       padding: const EdgeInsets.all(16.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: const [
-          Text(
+        children: [
+          const Text(
             'Professional Fire Protection Services',
             style: TextStyle(
               fontSize: 22,
@@ -165,13 +196,35 @@ class _ServicesPageState extends State<ServicesPage> {
               height: 1.2,
             ),
           ),
-          SizedBox(height: 12),
-          Text(
-            'Comprehensive life-safety solutions engineered for maximum reliability and BFP compliance. Select a service to start your project inquiry.',
+          const SizedBox(height: 12),
+          const Text(
+            'Explore our fire-protection services. When you are ready, start an inquiry and our team can help assess your project requirements.',
             style: TextStyle(
               fontSize: 12,
               color: Color(0xFF666666),
               height: 1.5,
+            ),
+          ),
+          const SizedBox(height: 20),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: widget.onStartInquiry,
+              icon: const Icon(Icons.arrow_forward, color: Colors.white),
+              label: const Text(
+                'Start service inquiry',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFB71C1C),
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(6),
+                ),
+              ),
             ),
           ),
         ],
@@ -179,103 +232,14 @@ class _ServicesPageState extends State<ServicesPage> {
     );
   }
 
-  Widget _buildTabs() {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-      child: Row(
-        children: _tabs.map((tab) {
-          bool isActive = _selectedTab == tab;
-          return GestureDetector(
-            onTap: () => setState(() => _selectedTab = tab),
-            child: Container(
-              margin: const EdgeInsets.only(right: 24),
-              padding: const EdgeInsets.only(bottom: 8),
-              decoration: BoxDecoration(
-                border: Border(
-                  bottom: BorderSide(
-                    color: isActive
-                        ? const Color(0xFFB71C1C)
-                        : Colors.transparent,
-                    width: 2,
-                  ),
-                ),
-              ),
-              child: Text(
-                tab,
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
-                  color: isActive
-                      ? const Color(0xFFB71C1C)
-                      : const Color(0xFF666666),
-                ),
-              ),
-            ),
-          );
-        }).toList(),
-      ),
-    );
-  }
-
   Widget _buildServicesList() {
     return Padding(
       padding: const EdgeInsets.all(16.0),
-      child: FutureBuilder<List<Map<String, dynamic>>>(
-        future: _fetchServices(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Padding(
-              padding: EdgeInsets.symmetric(vertical: 40.0),
-              child: Center(
-                child: CircularProgressIndicator(color: Color(0xFFB71C1C)),
-              ),
-            );
-          }
-          if (snapshot.hasError ||
-              !snapshot.hasData ||
-              snapshot.data!.isEmpty) {
-            return const Padding(
-              padding: EdgeInsets.symmetric(vertical: 40.0),
-              child: Center(
-                child: Text(
-                  'No services found.',
-                  style: TextStyle(color: Colors.grey),
-                ),
-              ),
-            );
-          }
-
-          var services = snapshot.data!
-              .where((s) => s['category'] == _selectedTab)
-              .toList();
-
-          if (services.isEmpty) {
-            return const Padding(
-              padding: EdgeInsets.symmetric(vertical: 40.0),
-              child: Center(
-                child: Text(
-                  'No services currently listed under this category.',
-                  style: TextStyle(color: Colors.grey),
-                ),
-              ),
-            );
-          }
-
-          return Column(
-            children: services.map((service) {
-              final title = service['service_name'] ?? 'Unknown Service';
-              final desc = service['description'] ?? 'No description provided.';
-              final cat = service['category'] ?? 'General';
-              final imageUrl = service['image_url'] ?? '';
-
-              IconData serviceIcon = Icons.build_circle_outlined;
-              if (title.toLowerCase().contains('sprinkler')) {
-                serviceIcon = Icons.shower_outlined;
-              }
-              if (title.toLowerCase().contains('alarm')) {
-                serviceIcon = Icons.sensors;
-              }
+      child: Column(
+        children: _services.map((service) {
+              final title = service['title'] as String;
+              final desc = service['description'] as String;
+              final serviceIcon = service['icon'] as IconData;
 
               return Container(
                 margin: const EdgeInsets.only(bottom: 16),
@@ -343,8 +307,8 @@ class _ServicesPageState extends State<ServicesPage> {
                               context,
                               title,
                               desc,
-                              cat,
-                              imageUrl,
+                              'Fire Protection Service',
+                              '',
                             ),
                             style: OutlinedButton.styleFrom(
                               foregroundColor: const Color(0xFF666666),
@@ -371,7 +335,7 @@ class _ServicesPageState extends State<ServicesPage> {
                               color: Colors.white,
                             ),
                             label: const Text(
-                              'Start Inquiry',
+                              'Start service inquiry',
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 color: Colors.white,
@@ -391,8 +355,6 @@ class _ServicesPageState extends State<ServicesPage> {
                 ),
               );
             }).toList(),
-          );
-        },
       ),
     );
   }
